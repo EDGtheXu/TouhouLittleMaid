@@ -59,6 +59,8 @@ public class BlockGarageKit extends Block implements EntityBlock {
             CompoundTag data = stack.getOrCreateTagElement(ENTITY_INFO);
             data.putString("id", Objects.requireNonNull(ForgeRegistries.ENTITY_TYPES.getKey(InitEntities.MAID.get())).toString());
             data.putString(EntityMaid.MODEL_ID_TAG, modelId);
+            // 创造模式物品栏数据需要强制指定 YSM 渲染为空
+            data.putBoolean(EntityMaid.IS_YSM_MODEL_TAG, false);
             items.accept(stack);
         }
     }

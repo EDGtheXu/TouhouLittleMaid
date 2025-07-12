@@ -21,6 +21,7 @@ public final class MiscConfig {
     public static ForgeConfigSpec.IntValue SCARECROW_RANGE;
     public static ForgeConfigSpec.BooleanValue USE_NEW_MAID_FAIRY_MODEL;
     public static ForgeConfigSpec.BooleanValue MODEL_ICON_CACHE;
+    public static ForgeConfigSpec.BooleanValue INVULNERABLE_PARTICLE_EFFECT;
 
     public static void init(ForgeConfigSpec.Builder builder) {
         builder.push("misc");
@@ -64,7 +65,10 @@ public final class MiscConfig {
         USE_NEW_MAID_FAIRY_MODEL = builder.define("UseNewMaidFairyModel", true);
 
         builder.comment("Whether to enable model icon caching");
-        MODEL_ICON_CACHE = builder.define("ModelIconCache", true);
+        MODEL_ICON_CACHE = builder.define("EnableModelIconCache", false);
+
+        builder.comment("Does an invulnerable maid have a particle effect?");
+        INVULNERABLE_PARTICLE_EFFECT = builder.define("InvulnerableParticleEffect", true);
 
         builder.pop();
     }

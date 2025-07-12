@@ -2,9 +2,10 @@ package com.github.tartaricacid.touhoulittlemaid.compat.tacz.client;
 
 import com.github.tartaricacid.touhoulittlemaid.api.backpack.IMaidBackpack;
 import com.github.tartaricacid.touhoulittlemaid.api.entity.IMaid;
+import com.github.tartaricacid.touhoulittlemaid.compat.tacz.TacCompat;
 import com.github.tartaricacid.touhoulittlemaid.entity.backpack.BackpackManager;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
-import com.github.tartaricacid.touhoulittlemaid.geckolib3.geo.animated.AnimatedGeoModel;
+import com.github.tartaricacid.touhoulittlemaid.geckolib3.geo.animated.ILocationModel;
 import com.github.tartaricacid.touhoulittlemaid.geckolib3.util.RenderUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
@@ -26,8 +27,12 @@ import java.util.Locale;
 @OnlyIn(Dist.CLIENT)
 public class GunMaidRender {
     public static void addItemTranslate(PoseStack matrixStack, ItemStack itemStack, boolean isLeft) {
-        if (!isLeft && itemStack.getItem() instanceof IGun) {
+        if (!isLeft && itemStack.getItem() instanceof IGun gun) {
             matrixStack.translate(0, -0.125, 0);
+            if (TacCompat.MINIGUN_ID.equals(gun.getGunId(itemStack))) {
+                matrixStack.mulPose(Axis.ZP.rotationDegrees(20));
+                matrixStack.mulPose(Axis.XP.rotationDegrees(50));
+            }
         }
     }
 
@@ -56,7 +61,7 @@ public class GunMaidRender {
         matrixStack.popPose();
     }
 
-    public static void renderBackGun(ItemStack heldItem, AnimatedGeoModel geoModel, IMaid maid, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
+    public static void renderBackGun(ItemStack heldItem, ILocationModel geoModel, IMaid maid, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
         IGun gun = IGun.getIGunOrNull(heldItem);
         if (gun == null) {
             return;

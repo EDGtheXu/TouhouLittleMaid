@@ -118,8 +118,8 @@ public abstract class AbstractModelGui<T extends LivingEntity, E extends IModelI
         }
 
         // 关闭当前界面的按键
-        this.addRenderableWidget(new ImageButton(startX + 122, startY - 97, 21, 17, 58, 201, 18, BG,
-                (b) -> getMinecraft().submit(() -> getMinecraft().setScreen(null))));
+        this.addRenderableWidget(new ImageButton(startX + 122, startY - 97, 21, 17,
+                58, 201, 18, BG, b -> this.onClickCloseButton()));
 
         // 添加切换页面的按钮
         addPageButton(startX, startY);
@@ -467,8 +467,13 @@ public abstract class AbstractModelGui<T extends LivingEntity, E extends IModelI
                 // 塞入提示语
                 if (!modelItem.getName().equals(ENCRYPT_EGG_NAME) && !modelItem.getName().equals(NORMAL_EGG_NAME)) {
                     tooltips.add(Component.translatable("gui.touhou_little_maid.skin.tooltips.show_details")
-                            .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
+                            .withStyle(ChatFormatting.DARK_PURPLE));
                 }
+                // 当开启显示更多物品信息功能时，显示模型 ID
+                if (getMinecraft().options.advancedItemTooltips) {
+                    tooltips.add(Component.literal(modelItem.getModelId().toString()).withStyle(ChatFormatting.DARK_GRAY));
+                }
+                tooltips.add(ParseI18n.parse(pack.getPackName()).withStyle(ChatFormatting.BLUE));
                 // 绘制解析过的文本提示
                 graphics.renderComponentTooltip(font, tooltips, mouseX, mouseY);
             }
@@ -527,5 +532,9 @@ public abstract class AbstractModelGui<T extends LivingEntity, E extends IModelI
     @Override
     public boolean isPauseScreen() {
         return false;
+    }
+
+    protected void onClickCloseButton() {
+        this.onClose();
     }
 }

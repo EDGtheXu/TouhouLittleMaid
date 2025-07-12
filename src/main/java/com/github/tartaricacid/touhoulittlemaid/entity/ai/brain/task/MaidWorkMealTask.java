@@ -6,12 +6,10 @@ import com.github.tartaricacid.touhoulittlemaid.entity.favorability.Favorability
 import com.github.tartaricacid.touhoulittlemaid.entity.favorability.Type;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.github.tartaricacid.touhoulittlemaid.entity.task.meal.MaidMealManager;
-import com.github.tartaricacid.touhoulittlemaid.init.InitEntities;
 import com.google.common.collect.ImmutableMap;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.wrapper.RangedWrapper;
 
 import java.util.List;
@@ -29,7 +27,7 @@ public class MaidWorkMealTask extends MaidCheckRateTask {
         if (super.checkExtraStartConditions(serverLevel, maid)) {
             String workMealTypeName = Type.WORK_MEAL.getTypeName();
             FavorabilityManager manager = maid.getFavorabilityManager();
-            return !maid.isSleeping() && manager.canAdd(workMealTypeName);
+            return !maid.isSleeping() && maid.getTask().enableEating(maid) && manager.canAdd(workMealTypeName);
         }
         return false;
     }
@@ -75,11 +73,9 @@ public class MaidWorkMealTask extends MaidCheckRateTask {
             }
             for (IMaidMeal maidMeal : maidMeals) {
                 if (maidMeal.canMaidEat(maid, stack, eanHand)) {
-                    ItemStack foodStack = stack.copy();
+                    ItemStack foodStack = backpackInv.extractItem(i, backpackInv.getStackInSlot(i).getCount(), false);
                     ItemStack handStack = itemInHand.copy();
                     maid.setItemInHand(eanHand, foodStack);
-                    backpackInv.setStackInSlot(i, ItemStack.EMPTY);
-                    ItemHandlerHelper.insertItemStacked(backpackInv, handStack, false);
                     maid.memoryHandItemStack(handStack);
                     itemInHand = maid.getItemInHand(eanHand);
                     hasFood = true;

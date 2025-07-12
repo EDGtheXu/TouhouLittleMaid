@@ -8,7 +8,6 @@ import com.google.common.collect.ImmutableMap;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.wrapper.RangedWrapper;
 
 import java.util.List;
@@ -27,7 +26,7 @@ public class MaidHealSelfTask extends MaidCheckRateTask {
     protected boolean checkExtraStartConditions(ServerLevel serverLevel, EntityMaid maid) {
         if (super.checkExtraStartConditions(serverLevel, maid)) {
             float missingHealth = maid.getMaxHealth() - maid.getHealth();
-            return !maid.isSleeping() && missingHealth >= MAX_CHECK_MISSING_HEATH;
+            return !maid.isSleeping() && maid.getTask().enableEating(maid) && missingHealth >= MAX_CHECK_MISSING_HEATH;
         }
         return false;
     }
@@ -73,11 +72,9 @@ public class MaidHealSelfTask extends MaidCheckRateTask {
             }
             for (IMaidMeal maidMeal : maidMeals) {
                 if (maidMeal.canMaidEat(maid, stack, eanHand)) {
-                    ItemStack foodStack = stack.copy();
+                    ItemStack foodStack = backpackInv.extractItem(i, backpackInv.getStackInSlot(i).getCount(), false);
                     ItemStack handStack = itemInHand.copy();
                     maid.setItemInHand(eanHand, foodStack);
-                    backpackInv.setStackInSlot(i, ItemStack.EMPTY);
-                    ItemHandlerHelper.insertItemStacked(backpackInv, handStack, false);
                     itemInHand = maid.getItemInHand(eanHand);
                     maid.memoryHandItemStack(handStack);
                     hasFood = true;

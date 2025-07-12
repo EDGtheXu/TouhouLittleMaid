@@ -7,11 +7,18 @@ import com.github.tartaricacid.touhoulittlemaid.api.event.client.RenderMaidEvent
 import com.github.tartaricacid.touhoulittlemaid.client.animation.HardcodedAnimationManger;
 import com.github.tartaricacid.touhoulittlemaid.client.animation.script.GlWrapper;
 import com.github.tartaricacid.touhoulittlemaid.client.model.bedrock.BedrockModel;
+import com.github.tartaricacid.touhoulittlemaid.client.renderer.entity.chatbubble.ChatBubbleRenderer;
+import com.github.tartaricacid.touhoulittlemaid.client.renderer.entity.chatbubble.EntityGraphics;
 import com.github.tartaricacid.touhoulittlemaid.client.renderer.entity.layer.*;
 import com.github.tartaricacid.touhoulittlemaid.client.resource.CustomPackLoader;
 import com.github.tartaricacid.touhoulittlemaid.client.resource.models.MaidModels;
 import com.github.tartaricacid.touhoulittlemaid.client.resource.pojo.MaidModelInfo;
+import com.github.tartaricacid.touhoulittlemaid.compat.ysm.YsmCompat;
+import com.github.tartaricacid.touhoulittlemaid.config.subconfig.MaidConfig;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
+import com.github.tartaricacid.touhoulittlemaid.geckolib3.geo.GeoLayerRenderer;
+import com.github.tartaricacid.touhoulittlemaid.geckolib3.geo.IGeoEntity;
+import com.github.tartaricacid.touhoulittlemaid.geckolib3.geo.IGeoEntityRenderer;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
@@ -25,15 +32,29 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.function.Function;
 
 @OnlyIn(Dist.CLIENT)
 @SuppressWarnings("rawtypes,unchecked")
 public class EntityMaidRenderer extends MobRenderer<Mob, BedrockModel<Mob>> {
     private static final ResourceLocation DEFAULT_TEXTURE = new ResourceLocation(TouhouLittleMaid.MOD_ID, "textures/entity/empty.png");
     private static final String DEFAULT_MODEL_ID = "touhou_little_maid:hakurei_reimu";
+    /**
+     * YSM 到时候会把渲染器加入其中
+     */
+    public static @Nullable Function<EntityRendererProvider.Context, IGeoEntityRenderer<Mob>> YSM_ENTITY_MAID_RENDERER;
+    /**
+     * 女仆模组自带的 GeckoLib 模型渲染
+     */
     private final GeckoEntityMaidRenderer geckoEntityMaidRenderer;
+    /**
+     * YSM 借用的渲染类型，和上述互斥
+     */
+    private @Nullable IGeoEntityRenderer<Mob> ysmMaidRenderer;
+    private ChatBubbleRenderer chatBubbleRenderer2;
     private MaidModelInfo mainInfo;
     private List<Object> mainAnimations = Lists.newArrayList();
 
@@ -46,14 +67,37 @@ public class EntityMaidRenderer extends MobRenderer<Mob, BedrockModel<Mob>> {
         this.addLayer(new LayerMaidBanner(this, manager.getModelSet()));
         this.addAdditionMaidLayer(manager);
         this.geckoEntityMaidRenderer = new GeckoEntityMaidRenderer<>(manager);
+        this.initYsmModelRenderer(manager);
+        this.chatBubbleRenderer2 = new ChatBubbleRenderer(this);
+    }
+
+    /**
+     * 不能使用事件来初始化 YSM 渲染器
+     * <p>
+     * 使用事件的话，会受到先后顺序的影响
+     */
+    private void initYsmModelRenderer(EntityRendererProvider.Context manager) {
+        if (!YsmCompat.isInstalled() || YSM_ENTITY_MAID_RENDERER == null) {
+            return;
+        }
+        IGeoEntityRenderer<Mob> geoEntityRenderer = YSM_ENTITY_MAID_RENDERER.apply(manager);
+        if (geoEntityRenderer != null) {
+            this.ysmMaidRenderer = geoEntityRenderer;
+            // 将女仆模组自带的 GeckoLib 模型的 Layer 渲染复制到 YSM 的 Layer 里去
+            List<GeoLayerRenderer> layerRenderers = this.geckoEntityMaidRenderer.getLayerRenderers();
+            for (GeoLayerRenderer layerRenderer : layerRenderers) {
+                this.ysmMaidRenderer.addGeoLayerRenderer(layerRenderer.copy(this.ysmMaidRenderer));
+            }
+        }
     }
 
     @Override
     public void render(Mob entity, float entityYaw, float partialTicks, PoseStack poseStack, MultiBufferSource bufferIn, int packedLightIn) {
-        var maid = IMaid.convert(entity);
+        IMaid maid = IMaid.convert(entity);
         if (maid == null) {
             return;
         }
+
         // 读取默认模型，用于清除不存在模型的缓存残留
         CustomPackLoader.MAID_MODELS.getModel(DEFAULT_MODEL_ID).ifPresent(model -> this.model = model);
         CustomPackLoader.MAID_MODELS.getInfo(DEFAULT_MODEL_ID).ifPresent(info -> this.mainInfo = info);
@@ -77,8 +121,29 @@ public class EntityMaidRenderer extends MobRenderer<Mob, BedrockModel<Mob>> {
         // 渲染聊天气泡
         EntityMaid maidEntity = maid.asStrictMaid();
         // 暂定只能女仆显示
-        if (maidEntity != null && maidEntity.getConfigManager().isChatBubbleShow()) {
-            ChatBubbleRenderer.renderChatBubble(this, maidEntity, poseStack, bufferIn, packedLightIn);
+        if (maidEntity != null && MaidConfig.GLOBAL_MAID_SHOW_CHAT_BUBBLE.get() && maidEntity.getConfigManager().isChatBubbleShow()) {
+            poseStack.pushPose();
+            float offsetY = maidEntity.getNameTagOffsetY();
+            if (maidEntity.isMaidInSittingPose()) {
+                offsetY -= 0.25f;
+            }
+            poseStack.translate(0.0F, offsetY, 0.0F);
+            poseStack.mulPose(this.entityRenderDispatcher.cameraOrientation());
+            poseStack.scale(-0.025F, -0.025F, 0.025F);
+            EntityGraphics graphics = new EntityGraphics(bufferIn, poseStack, maidEntity, packedLightIn, partialTicks);
+            this.chatBubbleRenderer2.render(graphics);
+            poseStack.popPose();
+        }
+
+        // YSM 接管渲染
+        if (maid.isYsmModel() && this.ysmMaidRenderer != null) {
+            IGeoEntity geoEntity = this.ysmMaidRenderer.getGeoEntity(entity);
+            geoEntity.setYsmModel(maid.getYsmModelId(), maid.getYsmModelTexture());
+            if (maidEntity != null) {
+                geoEntity.updateRoamingVars(maidEntity.roamingVars);
+            }
+            this.ysmMaidRenderer.geoRender(entity, entityYaw, partialTicks, poseStack, bufferIn, packedLightIn);
+            return;
         }
 
         // GeckoLib 接管渲染
@@ -87,6 +152,7 @@ public class EntityMaidRenderer extends MobRenderer<Mob, BedrockModel<Mob>> {
             this.geckoEntityMaidRenderer.render(entity, entityYaw, partialTicks, poseStack, bufferIn, packedLightIn);
             return;
         }
+
         // 模型动画设置
         this.model.setAnimations(this.mainAnimations);
         // 渲染女仆模型本体

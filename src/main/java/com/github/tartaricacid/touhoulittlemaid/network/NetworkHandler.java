@@ -102,10 +102,34 @@ public final class NetworkHandler {
                 Optional.of(NetworkDirection.PLAY_TO_SERVER));
         CHANNEL.registerMessage(38, TTSAudioToClientMessage.class, TTSAudioToClientMessage::encode, TTSAudioToClientMessage::decode, TTSAudioToClientMessage::handle,
                 Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        // CHANNEL.registerMessage(39, SyncAiSettingMessage.class, SyncAiSettingMessage::encode, SyncAiSettingMessage::decode, SyncAiSettingMessage::handle,
+        //         Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        // 仅安装 YSM 后才会发送此包
+        CHANNEL.registerMessage(40, YsmMaidModelMessage.class, YsmMaidModelMessage::encode, YsmMaidModelMessage::decode, YsmMaidModelMessage::handle,
+                Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        CHANNEL.registerMessage(41, SaveMaidAIDataMessage.class, SaveMaidAIDataMessage::encode, SaveMaidAIDataMessage::decode, SaveMaidAIDataMessage::handle,
+                Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        // CHANNEL.registerMessage(42, GetMaidAIDataMessage.class, GetMaidAIDataMessage::encode, GetMaidAIDataMessage::decode, GetMaidAIDataMessage::handle,
+        //         Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        // CHANNEL.registerMessage(43, OpenMaidAIDataScreenMessage.class, OpenMaidAIDataScreenMessage::encode, OpenMaidAIDataScreenMessage::decode, OpenMaidAIDataScreenMessage::handle,
+        //        Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        // 仅安装 YSM 后才会发送此包
+        CHANNEL.registerMessage(44, SyncYsmMaidDataMessage.class, SyncYsmMaidDataMessage::encode, SyncYsmMaidDataMessage::decode, SyncYsmMaidDataMessage::handle,
+                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        CHANNEL.registerMessage(45, TTSSystemAudioToClientMessage.class, TTSSystemAudioToClientMessage::encode, TTSSystemAudioToClientMessage::decode, TTSSystemAudioToClientMessage::handle,
+                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        CHANNEL.registerMessage(46, ClearMaidAIDataMessage.class, ClearMaidAIDataMessage::encode, ClearMaidAIDataMessage::decode, ClearMaidAIDataMessage::handle,
+                Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        CHANNEL.registerMessage(47, OpenMaidGuiMessage.class, OpenMaidGuiMessage::encode, OpenMaidGuiMessage::decode, OpenMaidGuiMessage::handle,
+                Optional.of(NetworkDirection.PLAY_TO_SERVER));
     }
 
     public static void sendToClientPlayer(Object message, Player player) {
         CHANNEL.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), message);
+    }
+
+    public static void sendToTrackingEntity(Object message, final Entity centerEntity) {
+        CHANNEL.send(PacketDistributor.TRACKING_ENTITY.with(() -> centerEntity), message);
     }
 
     public static void sendToNearby(Level world, BlockPos pos, Object toSend) {

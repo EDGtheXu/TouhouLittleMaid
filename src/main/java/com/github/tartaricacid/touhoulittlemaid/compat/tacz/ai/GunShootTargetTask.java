@@ -1,5 +1,6 @@
 package com.github.tartaricacid.touhoulittlemaid.compat.tacz.ai;
 
+import com.github.tartaricacid.touhoulittlemaid.TouhouLittleMaid;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.google.common.collect.ImmutableMap;
 import com.tacz.guns.api.TimelessAPI;
@@ -77,7 +78,17 @@ public class GunShootTargetTask extends Behavior<EntityMaid> {
                     return;
                 }
                 ResourceLocation gunId = iGun.getGunId(mainHandItem);
-                TimelessAPI.getCommonGunIndex(gunId).ifPresentOrElse(index -> this.performGunAttack(owner, target, mainHandItem, iGun, index), () -> this.attackCooldown = 100);
+                TimelessAPI.getCommonGunIndex(gunId).ifPresentOrElse(index -> {
+                    try {
+                        // 由于部分枪包作者可能在写 lua 脚本时没有规范书写，导致 lua 脚本抛出异常
+                        // 所以这里捕获异常，避免因为 lua 脚本错误导致游戏崩溃
+                        this.performGunAttack(owner, target, mainHandItem, iGun, index);
+                    } catch (Exception e) {
+                        TouhouLittleMaid.LOGGER.error("Error while performing gun attack for EntityMaid: {}", owner.getUUID(), e);
+                        // 如果发生异常，重置攻击冷却时间
+                        this.attackCooldown = 100;
+                    }
+                }, () -> this.attackCooldown = 100);
             }
         });
     }

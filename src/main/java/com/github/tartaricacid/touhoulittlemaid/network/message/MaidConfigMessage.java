@@ -5,6 +5,7 @@ import com.github.tartaricacid.touhoulittlemaid.config.subconfig.MaidConfig;
 import com.github.tartaricacid.touhoulittlemaid.entity.ai.brain.MaidSchedule;
 import com.github.tartaricacid.touhoulittlemaid.entity.item.EntitySit;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
+import com.github.tartaricacid.touhoulittlemaid.entity.passive.SchedulePos;
 import com.github.tartaricacid.touhoulittlemaid.init.InitTrigger;
 import com.github.tartaricacid.touhoulittlemaid.network.NetworkHandler;
 import net.minecraft.core.BlockPos;
@@ -86,19 +87,22 @@ public class MaidConfigMessage {
 
     private static void handleHome(MaidConfigMessage message, ServerPlayer sender, EntityMaid maid) {
         if (message.home) {
-            ResourceLocation dimension = maid.getSchedulePos().getDimension();
-            if (!dimension.equals(maid.level.dimension().location())) {
-                CheckSchedulePosMessage tips = new CheckSchedulePosMessage(Component.translatable("message.touhou_little_maid.check_schedule_pos.dimension"));
-                NetworkHandler.sendToClientPlayer(tips, sender);
-                return;
+            SchedulePos schedulePos = maid.getSchedulePos();
+            if (schedulePos.isConfigured()) {
+                ResourceLocation dimension = schedulePos.getDimension();
+                if (!dimension.equals(maid.level.dimension().location())) {
+                    CheckSchedulePosMessage tips = new CheckSchedulePosMessage(Component.translatable("message.touhou_little_maid.check_schedule_pos.dimension"));
+                    NetworkHandler.sendToClientPlayer(tips, sender);
+                    return;
+                }
+                BlockPos nearestPos = schedulePos.getNearestPos(maid);
+                if (nearestPos != null && nearestPos.distSqr(maid.blockPosition()) > 32 * 32) {
+                    CheckSchedulePosMessage tips = new CheckSchedulePosMessage(Component.translatable("message.touhou_little_maid.check_schedule_pos.too_far"));
+                    NetworkHandler.sendToClientPlayer(tips, sender);
+                    return;
+                }
             }
-            BlockPos nearestPos = maid.getSchedulePos().getNearestPos(maid);
-            if (nearestPos != null && nearestPos.distSqr(maid.blockPosition()) > 32 * 32) {
-                CheckSchedulePosMessage tips = new CheckSchedulePosMessage(Component.translatable("message.touhou_little_maid.check_schedule_pos.too_far"));
-                NetworkHandler.sendToClientPlayer(tips, sender);
-                return;
-            }
-            maid.getSchedulePos().setHomeModeEnable(maid, maid.blockPosition());
+            schedulePos.setHomeModeEnable(maid, maid.blockPosition());
         } else {
             maid.restrictTo(BlockPos.ZERO, MaidConfig.MAID_NON_HOME_RANGE.get());
         }

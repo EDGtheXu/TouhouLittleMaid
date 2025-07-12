@@ -85,6 +85,7 @@ public class AltarRecipeCategory implements IRecipeCategory<AltarRecipeWrapper> 
     }
 
     @Override
+    @SuppressWarnings("removal")
     public IDrawable getBackground() {
         return bgDraw;
     }

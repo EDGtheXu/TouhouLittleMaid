@@ -120,6 +120,11 @@ public class TaskFeedAnimal implements IAttackTask {
         };
     }
 
+    @Override
+    public boolean isWeapon(EntityMaid maid, ItemStack stack) {
+        return stack.getAttributeModifiers(EquipmentSlot.MAINHAND).containsKey(Attributes.ATTACK_DAMAGE);
+    }
+
     private NearestVisibleLivingEntities getEntities(EntityMaid maid) {
         return maid.getBrain().getMemory(MemoryModuleType.NEAREST_VISIBLE_LIVING_ENTITIES).orElse(NearestVisibleLivingEntities.empty());
     }

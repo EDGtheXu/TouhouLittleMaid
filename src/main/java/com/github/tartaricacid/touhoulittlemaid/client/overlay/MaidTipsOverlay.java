@@ -2,7 +2,7 @@ package com.github.tartaricacid.touhoulittlemaid.client.overlay;
 
 import com.github.tartaricacid.touhoulittlemaid.TouhouLittleMaid;
 import com.github.tartaricacid.touhoulittlemaid.api.ILittleMaid;
-import com.github.tartaricacid.touhoulittlemaid.client.event.PressAIChatKeyEvent;
+import com.github.tartaricacid.touhoulittlemaid.compat.kubejs.ModKubeJSCompat;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -21,53 +21,59 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.client.gui.overlay.IGuiOverlay;
+import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.Tags;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
+
+import static com.github.tartaricacid.touhoulittlemaid.config.subconfig.RenderConfig.*;
 
 public class MaidTipsOverlay implements IGuiOverlay {
     private static final ResourceLocation ICON = new ResourceLocation(TouhouLittleMaid.MOD_ID, "textures/gui/maid_tips_icon.png");
 
     private static Map<Item, MutableComponent> TIPS = Maps.newHashMap();
+    private static Map<Item, ForgeConfigSpec.BooleanValue> TIPS_CONFIG = Maps.newHashMap();
     private static Map<CheckCondition, MutableComponent> SPECIAL_TIPS = Maps.newHashMap();
+
+    public MaidTipsOverlay() {
+        TIPS = Maps.newHashMap();
+        TIPS_CONFIG = Maps.newHashMap();
+        SPECIAL_TIPS = Maps.newHashMap();
+    }
 
     public static void init() {
         MaidTipsOverlay overlay = new MaidTipsOverlay();
 
-        overlay.addTips("overlay.touhou_little_maid.compass.tips", Items.COMPASS);
-        overlay.addTips("overlay.touhou_little_maid.golden_apple.tips", Items.GOLDEN_APPLE, Items.ENCHANTED_GOLDEN_APPLE);
-        overlay.addTips("overlay.touhou_little_maid.potion.tips", Items.POTION);
-        overlay.addTips("overlay.touhou_little_maid.milk_bucket.tips", Items.MILK_BUCKET);
-        overlay.addTips("overlay.touhou_little_maid.script_book.tips", Items.WRITABLE_BOOK, Items.WRITTEN_BOOK);
-        overlay.addTips("overlay.touhou_little_maid.glass_bottle.tips", Items.GLASS_BOTTLE);
-        overlay.addTips("overlay.touhou_little_maid.name_tag.tips", Items.NAME_TAG);
-        overlay.addTips("overlay.touhou_little_maid.lead.tips", Items.LEAD);
+        overlay.addTips("overlay.touhou_little_maid.compass.tips", ENABLE_COMPASS_TIP, Items.COMPASS);
+        overlay.addTips("overlay.touhou_little_maid.golden_apple.tips", ENABLE_GOLDEN_APPLE_TIP, Items.GOLDEN_APPLE, Items.ENCHANTED_GOLDEN_APPLE);
+        overlay.addTips("overlay.touhou_little_maid.potion.tips", ENABLE_POTION_TIP, Items.POTION);
+        overlay.addTips("overlay.touhou_little_maid.milk_bucket.tips", ENABLE_MILK_BUCKET_TIP, Items.MILK_BUCKET);
+        overlay.addTips("overlay.touhou_little_maid.glass_bottle.tips", ENABLE_GLASS_BOTTLE_TIP, Items.GLASS_BOTTLE);
+        overlay.addTips("overlay.touhou_little_maid.name_tag.tips", ENABLE_NAME_TAG_TIP, Items.NAME_TAG);
+        overlay.addTips("overlay.touhou_little_maid.lead.tips", ENABLE_LEAD_TIP, Items.LEAD);
         overlay.addTips("overlay.touhou_little_maid.debug_stick.tips", Items.DEBUG_STICK);
-        overlay.addTips("overlay.touhou_little_maid.saddle.tips", Items.SADDLE);
+        overlay.addTips("overlay.touhou_little_maid.saddle.tips", ENABLE_SADDLE_TIP, Items.SADDLE);
 
         overlay.addSpecialTips("overlay.touhou_little_maid.ntr_item.tips", (item, maid, player) -> !maid.isOwnedBy(player) && EntityMaid.getNtrItem().test(item));
-        overlay.addSpecialTips("overlay.touhou_little_maid.remove_backpack.tips", (item, maid, player) -> maid.isOwnedBy(player) && maid.hasBackpack() && item.is(Tags.Items.SHEARS));
-        // FIXME: 应该要能自定义，而不是指定特定的女仆才能对话
-        overlay.addSpecialTips("overlay.touhou_little_maid.can_ai_chat.tips", MaidTipsOverlay::checkAiChatCondition);
+        overlay.addSpecialTips("overlay.touhou_little_maid.remove_backpack.tips", MaidTipsOverlay::checkShears);
 
         for (ILittleMaid littleMaid : TouhouLittleMaid.EXTENSIONS) {
             littleMaid.addMaidTips(overlay);
         }
+        ModKubeJSCompat.maidTipsOverlayInit(overlay);
 
         TIPS = ImmutableMap.copyOf(TIPS);
+        TIPS_CONFIG = ImmutableMap.copyOf(TIPS_CONFIG);
         SPECIAL_TIPS = ImmutableMap.copyOf(SPECIAL_TIPS);
     }
 
-    private static boolean checkAiChatCondition(ItemStack item, EntityMaid maid, LocalPlayer player) {
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.screen != null) {
+    private static boolean checkShears(ItemStack item, EntityMaid maid, LocalPlayer player) {
+        if (!ENABLE_SHEARS_TIP.get()) {
             return false;
         }
-        if (!item.isEmpty()) {
-            return false;
-        }
-        return maid.isOwnedBy(player) && maid.getModelId().contains(PressAIChatKeyEvent.CAN_CHAT_MAID_ID);
+        return maid.isOwnedBy(player) && maid.hasBackpack() && item.is(Tags.Items.SHEARS);
     }
 
     private static MutableComponent checkSpecialTips(ItemStack mainhandItem, EntityMaid maid, LocalPlayer player) {
@@ -85,6 +91,7 @@ public class MaidTipsOverlay implements IGuiOverlay {
     public void render(ForgeGui gui, GuiGraphics guiGraphics, float partialTick, int screenWidth, int screenHeight) {
         Minecraft minecraft = gui.getMinecraft();
         Options options = minecraft.options;
+
         if (!options.getCameraType().isFirstPerson()) {
             return;
         }
@@ -104,31 +111,49 @@ public class MaidTipsOverlay implements IGuiOverlay {
         if (!maid.isAlive()) {
             return;
         }
-        MutableComponent tip = null;
-        if (maid.isOwnedBy(player)) {
-            tip = TIPS.get(player.getMainHandItem().getItem());
+        // 如果女仆和玩家同骑乘一个实体，很容易出现提示闪烁问题，故禁用
+        if (player.getVehicle() != null && player.getVehicle().equals(maid.getVehicle())) {
+            return;
         }
-        if (tip == null) {
-            tip = checkSpecialTips(player.getMainHandItem(), maid, player);
+
+        MutableComponent tip;
+        ItemStack itemStack = player.getMainHandItem();
+        Item item = itemStack.getItem();
+        if (maid.isOwnedBy(player) && TIPS.containsKey(item)) {
+            boolean configIsNull = !TIPS_CONFIG.containsKey(item);
+            boolean configIsEnable = TIPS_CONFIG.containsKey(item) && TIPS_CONFIG.get(item).get();
+            if (configIsNull || configIsEnable) {
+                tip = TIPS.get(item);
+            } else {
+                tip = checkSpecialTips(itemStack, maid, player);
+            }
+        } else {
+            tip = checkSpecialTips(itemStack, maid, player);
         }
         if (tip != null) {
             gui.setupOverlayRenderState(true, false);
-            List<FormattedCharSequence> split = minecraft.font.split(tip, 150);
+            List<FormattedCharSequence> split = minecraft.font.split(tip, 120);
             int offset = (screenHeight / 2 - 5) - split.size() * 10;
-            guiGraphics.renderItem(player.getMainHandItem(), screenWidth / 2 - 8, offset);
-            guiGraphics.blit(ICON, screenWidth / 2 + 2, offset - 4, 16, 16, 16, 16, 16, 16);
+            guiGraphics.renderItem(itemStack, screenWidth / 2 + 32, offset);
+            guiGraphics.blit(ICON, screenWidth / 2 + 42, offset - 4, 16, 16, 16, 16, 16, 16);
             offset += 18;
             for (FormattedCharSequence sequence : split) {
-                int width = minecraft.font.width(sequence);
-                guiGraphics.drawString(minecraft.font, sequence, (screenWidth - width) / 2, offset, 0xFFFFFF);
+                guiGraphics.drawString(minecraft.font, sequence, screenWidth / 2 + 32, offset, 0xFFFFFF);
                 offset += 10;
             }
         }
     }
 
     public void addTips(String key, Item... items) {
+        addTips(key, null, items);
+    }
+
+    public void addTips(String key, @Nullable ForgeConfigSpec.BooleanValue config, Item... items) {
         for (Item item : items) {
             TIPS.put(item, Component.translatable(key));
+            if (config != null) {
+                TIPS_CONFIG.put(item, config);
+            }
         }
     }
 

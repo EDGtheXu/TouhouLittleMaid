@@ -2,8 +2,8 @@ package com.github.tartaricacid.touhoulittlemaid.entity.task;
 
 import com.github.tartaricacid.touhoulittlemaid.TouhouLittleMaid;
 import com.github.tartaricacid.touhoulittlemaid.api.task.IFarmTask;
-import com.github.tartaricacid.touhoulittlemaid.entity.ai.brain.task.MaidFarmMoveTask;
 import com.github.tartaricacid.touhoulittlemaid.entity.ai.brain.task.MaidFarmPlantTask;
+import com.github.tartaricacid.touhoulittlemaid.entity.ai.brain.task.MaidFarmSurroundingMoveTask;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.google.common.collect.Lists;
 import com.mojang.datafixers.util.Pair;
@@ -36,24 +36,9 @@ public class TaskCocoa implements IFarmTask {
 
     @Override
     public List<Pair<Integer, BehaviorControl<? super EntityMaid>>> createBrainTasks(EntityMaid maid) {
-        MaidFarmMoveTask maidFarmMoveTask = new MaidFarmMoveTask(this, 0.6f) {
-            @Override
-            protected boolean checkPathReach(EntityMaid maid, BlockPos pos) {
-                for (int x = -1; x <= 1; x++) {
-                    for (int y = 0; y <= 1; y++) {
-                        for (int z = -1; z <= 1; z++) {
-                            // FIXME: 2025-01-20 有性能问题，需要优化
-                            if (maid.canPathReach(pos.offset(x, y, z))) {
-                                return true;
-                            }
-                        }
-                    }
-                }
-                return false;
-            }
-        };
+        MaidFarmSurroundingMoveTask maidFarmSurroundingMoveTask = new MaidFarmSurroundingMoveTask(this, 0.6f);
         MaidFarmPlantTask maidFarmPlantTask = new MaidFarmPlantTask(this);
-        return Lists.newArrayList(Pair.of(5, maidFarmMoveTask), Pair.of(6, maidFarmPlantTask));
+        return Lists.newArrayList(Pair.of(5, maidFarmSurroundingMoveTask), Pair.of(6, maidFarmPlantTask));
     }
 
     @Override

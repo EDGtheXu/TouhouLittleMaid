@@ -11,6 +11,10 @@
     {
       "type": "text",
       "text": "patchouli.touhou_little_maid.book.entries.maid.spawn_maid.pages.1.text"
+    },
+    {
+      "type": "altar_recipe",
+      "recipe_id": "touhou_little_maid:altar/spawn_box"
     }
   ]
 }

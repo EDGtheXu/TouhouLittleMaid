@@ -7,12 +7,14 @@ import com.github.tartaricacid.touhoulittlemaid.entity.backpack.BackpackManager;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.github.tartaricacid.touhoulittlemaid.entity.task.TaskManager;
 import com.github.tartaricacid.touhoulittlemaid.util.BiomeCacheUtil;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -66,6 +68,66 @@ public interface IMaid {
      * 获取模型 ID
      */
     String getModelId();
+
+    /**
+     * 女仆可以调用 YSM 渲染
+     *
+     * @return 是否当前使用的是 YSM 渲染模型
+     */
+    default boolean isYsmModel() {
+        return false;
+    }
+
+    /**
+     * 设置是否使用 YSM 渲染模型
+     */
+    default void setIsYsmModel(boolean isYsmModel) {
+    }
+
+    /**
+     * 获取 YSM 模型 ID
+     *
+     * @return 模型 ID 可能是任意字符
+     */
+    default String getYsmModelId() {
+        return StringUtils.EMPTY;
+    }
+
+    /**
+     * 获取 YSM 模型材质名称
+     *
+     * @return 材质名称可能是任意字符
+     */
+    default String getYsmModelTexture() {
+        return StringUtils.EMPTY;
+    }
+
+    /**
+     * 获取 YSM 模型显示名称
+     *
+     * @return 显示名称
+     */
+    default Component getYsmModelName() {
+        return Component.empty();
+    }
+
+    /**
+     * 设置 YSM 模型 ID 和材质名称。还有显示名称
+     */
+    default void setYsmModel(String modelId, String texture, Component name) {
+    }
+
+    /**
+     * 播放轮盘动画
+     */
+    default void playRouletteAnim(String rouletteAnim) {
+    }
+
+    /**
+     * 停止轮盘动画
+     */
+    default void stopRouletteAnim() {
+    }
 
     /**
      * 转成原实体对象
@@ -204,5 +266,4 @@ public interface IMaid {
         }
         return 0;
     }
-
 }

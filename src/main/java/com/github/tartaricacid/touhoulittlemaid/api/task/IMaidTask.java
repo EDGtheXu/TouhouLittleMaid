@@ -103,6 +103,39 @@ public interface IMaidTask {
     }
 
     /**
+     * 是否启用吃饭 AI，默认情况下女仆在工作模式下也会吃东西，但是有些工作模式不能这么做
+     *
+     * @param maid 女仆对象
+     * @return 是否启用吃饭 AI
+     */
+    default boolean enableEating(EntityMaid maid) {
+        return true;
+    }
+
+    /**
+     * 是否为拥有工作点的 task，比如钓鱼，必须要坐在坐垫或者船上才能执行
+     * <p>
+     * 那么在空闲模式下，女仆就需要主动脱离坐垫或者船，就需要判断此处
+     *
+     * @param maid 女仆对象
+     * @return 是否为拥有工作点的 task
+     */
+    default boolean workPointTask(EntityMaid maid) {
+        return false;
+    }
+
+    /**
+     * 处于该工作模式时，女仆是否允许坐在娱乐方块上？
+     *
+     * @param maid    女仆
+     * @param joyType 娱乐方块类型
+     * @return 处于该工作模式时，女仆是否允许坐在娱乐方块上？
+     */
+    default boolean canSitInJoy(EntityMaid maid, String joyType) {
+        return false;
+    }
+
+    /**
      * 获取任务启用的条件提示文本
      *
      * @param maid 女仆对象

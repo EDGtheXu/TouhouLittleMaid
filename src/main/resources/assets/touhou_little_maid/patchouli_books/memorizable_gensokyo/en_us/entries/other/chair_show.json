@@ -8,6 +8,10 @@
       "type": "spotlight",
       "item": "touhou_little_maid:chair_show",
       "text": "patchouli.touhou_little_maid.book.entries.other.chair_show.pages.0.text"
+    },
+    {
+      "type": "crafting",
+      "recipe": "touhou_little_maid:chair_show"
     }
   ]
 }

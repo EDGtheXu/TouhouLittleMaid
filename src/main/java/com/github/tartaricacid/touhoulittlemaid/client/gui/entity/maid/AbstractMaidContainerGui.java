@@ -2,12 +2,16 @@ package com.github.tartaricacid.touhoulittlemaid.client.gui.entity.maid;
 
 import com.github.tartaricacid.touhoulittlemaid.TouhouLittleMaid;
 import com.github.tartaricacid.touhoulittlemaid.api.client.gui.ITooltipButton;
+import com.github.tartaricacid.touhoulittlemaid.api.event.MaidTaskEnableEvent;
+import com.github.tartaricacid.touhoulittlemaid.api.event.client.MaidContainerGuiEvent;
 import com.github.tartaricacid.touhoulittlemaid.api.task.IMaidTask;
 import com.github.tartaricacid.touhoulittlemaid.client.gui.entity.cache.CacheIconManager;
 import com.github.tartaricacid.touhoulittlemaid.client.gui.sound.MaidSoundPackGui;
 import com.github.tartaricacid.touhoulittlemaid.client.gui.widget.button.*;
 import com.github.tartaricacid.touhoulittlemaid.client.resource.CustomPackLoader;
 import com.github.tartaricacid.touhoulittlemaid.compat.ipn.SortButtonScreen;
+import com.github.tartaricacid.touhoulittlemaid.compat.ysm.YsmCompat;
+import com.github.tartaricacid.touhoulittlemaid.compat.ysm.event.OpenYsmMaidScreenEvent;
 import com.github.tartaricacid.touhoulittlemaid.entity.ai.brain.MaidGomokuAI;
 import com.github.tartaricacid.touhoulittlemaid.entity.favorability.FavorabilityManager;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
@@ -20,11 +24,13 @@ import com.github.tartaricacid.touhoulittlemaid.network.message.RequestEffectMes
 import com.github.tartaricacid.touhoulittlemaid.network.message.SendEffectMessage;
 import com.github.tartaricacid.touhoulittlemaid.util.ParseI18n;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.ChatFormatting;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.components.StateSwitchingButton;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -39,12 +45,15 @@ import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.StringUtil;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.ModList;
+import org.jetbrains.annotations.Nullable;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 
 import static com.github.tartaricacid.touhoulittlemaid.util.GuiTools.NO_ACTION;
@@ -60,11 +69,16 @@ public abstract class AbstractMaidContainerGui<T extends AbstractMaidContainer> 
     private static boolean TASK_LIST_OPEN = false;
     protected final EntityMaid maid;
     protected final IMaidTask task;
+    /**
+     * 事件系统添加的额外按钮
+     */
+    private final Map<String, AbstractWidget> eventAddButtons = Maps.newHashMap();
     private StateSwitchingButton home;
     private StateSwitchingButton pick;
     private StateSwitchingButton ride;
     private ImageButton info;
     private ImageButton skin;
+    private @Nullable ImageButton ysmSkin;
     private ImageButton sound;
     private ImageButton pageDown;
     private ImageButton pageUp;
@@ -80,6 +94,12 @@ public abstract class AbstractMaidContainerGui<T extends AbstractMaidContainer> 
         this.imageWidth = 256;
         this.maid = menu.getMaid();
         this.task = menu.getMaid().getTask();
+    }
+
+    @Override
+    protected void clearWidgets() {
+        super.clearWidgets();
+        this.eventAddButtons.clear();
     }
 
     @Override
@@ -100,6 +120,9 @@ public abstract class AbstractMaidContainerGui<T extends AbstractMaidContainer> 
         this.initBaseWidgets();
         // 初始化额外 Widgets
         this.initAdditionWidgets();
+        // 事件系统，用于其他模型添加额外的按钮
+        MinecraftForge.EVENT_BUS.post(new MaidContainerGuiEvent.Init(this, leftPos, topPos, this.eventAddButtons));
+        this.eventAddButtons.values().forEach(this::addRenderableWidget);
     }
 
     protected void initBaseData() {
@@ -138,8 +161,12 @@ public abstract class AbstractMaidContainerGui<T extends AbstractMaidContainer> 
         this.drawEffectInfo(graphics);
         this.drawCurrentTaskText(graphics);
         this.renderAddition(graphics, mouseX, mouseY, partialTicks);
+        MinecraftForge.EVENT_BUS.post(new MaidContainerGuiEvent.Render(this, leftPos, topPos,
+                this.eventAddButtons, graphics, mouseX, mouseY, partialTicks));
         // 确保 Tooltip 是最后渲染的
         this.renderTooltip(graphics, mouseX, mouseY);
+        MinecraftForge.EVENT_BUS.post(new MaidContainerGuiEvent.Tooltip(this, leftPos, topPos,
+                this.eventAddButtons, graphics, mouseX, mouseY, partialTicks));
     }
 
     // 其他的渲染
@@ -214,6 +241,9 @@ public abstract class AbstractMaidContainerGui<T extends AbstractMaidContainer> 
         renderTransTooltip(ride, graphics, x, y, "gui.touhou_little_maid.button.maid_riding_set");
         renderTransTooltip(modelDownload, graphics, x, y, "gui.touhou_little_maid.button.model_download");
         renderTransTooltip(skin, graphics, x, y, "gui.touhou_little_maid.button.skin");
+        if (ysmSkin != null) {
+            renderTransTooltip(ysmSkin, graphics, x, y, "gui.touhou_little_maid.button.ysm_skin");
+        }
         renderTransTooltip(sound, graphics, x, y, "gui.touhou_little_maid.button.sound");
         renderTransTooltip(pageUp, graphics, x, y, "gui.touhou_little_maid.task.previous_page");
         renderTransTooltip(pageDown, graphics, x, y, "gui.touhou_little_maid.task.next_page");
@@ -237,11 +267,26 @@ public abstract class AbstractMaidContainerGui<T extends AbstractMaidContainer> 
 
     private void addStateButton() {
         skin = new ImageButton(leftPos + 62, topPos + 14, 9, 9, 72, 43, 10, BUTTON, (b) -> CacheIconManager.openMaidModelGui(maid));
-        sound = new ImageButton(leftPos + 52, topPos + 14, 9, 9, 144, 43, 10, BUTTON, (b) -> getMinecraft().setScreen(new MaidSoundPackGui(maid)));
         info = new ImageButton(leftPos + 8, topPos + 14, 9, 9, 72, 65, 10, BUTTON, NO_ACTION);
         this.addRenderableWidget(skin);
-        this.addRenderableWidget(sound);
         this.addRenderableWidget(info);
+
+        if (YsmCompat.isInstalled()) {
+            this.ysmSkin = new ImageButton(leftPos + 52, topPos + 14, 9, 9,
+                    144, 65, 10, BUTTON,
+                    (b) -> MinecraftForge.EVENT_BUS.post(new OpenYsmMaidScreenEvent(maid)));
+            this.sound = new ImageButton(leftPos + 42, topPos + 14, 9, 9,
+                    144, 43, 10, BUTTON,
+                    (b) -> getMinecraft().setScreen(new MaidSoundPackGui(maid)));
+
+            this.addRenderableWidget(ysmSkin);
+            this.addRenderableWidget(sound);
+        } else {
+            this.sound = new ImageButton(leftPos + 52, topPos + 14, 9, 9,
+                    144, 43, 10, BUTTON,
+                    (b) -> getMinecraft().setScreen(new MaidSoundPackGui(maid)));
+            this.addRenderableWidget(sound);
+        }
     }
 
     private void addTaskControlButton() {
@@ -285,34 +330,42 @@ public abstract class AbstractMaidContainerGui<T extends AbstractMaidContainer> 
 
     private void drawPerTaskButton(List<IMaidTask> tasks, int count, int index) {
         final IMaidTask maidTask = tasks.get(index);
-        boolean enable = maidTask.isEnable(maid);
-        TaskButton button = new TaskButton(maidTask, enable, leftPos - 89, topPos + 23 + 19 * count,
+
+        boolean[] enable = {true};
+        List<Pair<String, Predicate<EntityMaid>>> enableConditionDesc = Lists.newArrayList();
+        if (maidTask != TaskManager.getIdleTask()) {
+            if (MinecraftForge.EVENT_BUS.post(new MaidTaskEnableEvent(maidTask, maid, enableConditionDesc))) {
+                // 如果事件系统管控了启用条件
+                enable[0] = false;
+            } else if (!maidTask.isEnable(maid)) {
+                // 如果 task 里的条件也不启用
+                enableConditionDesc.addAll(maidTask.getEnableConditionDesc(maid));
+                enable[0] = false;
+            }
+        }
+
+        TaskButton button = new TaskButton(maidTask, enable[0], leftPos - 89, topPos + 23 + 19 * count,
                 83, 19, 93, 28, 20, TASK, 256, 256,
-                (b) -> {
-                    if (enable) {
-                        taskButtonPressed(maidTask, true);
-                    }
-                },
-                getTaskTooltips(maidTask), Component.empty());
+                b -> taskButtonPressed(maidTask, enable[0]),
+                getTaskTooltips(maidTask, enable[0], enableConditionDesc), Component.empty());
         this.addRenderableWidget(button);
         button.visible = TASK_LIST_OPEN;
     }
 
     // 用于开放切换任务时对当前 GUI 的操作
     protected void taskButtonPressed(IMaidTask maidTask, boolean enable) {
-        if (maid != null) {
+        if (enable && maid != null) {
             maid.setTask(maidTask);
             NetworkHandler.CHANNEL.sendToServer(new MaidTaskMessage(maid.getId(), maidTask.getUid()));
         }
     }
 
-    private List<Component> getTaskTooltips(IMaidTask maidTask) {
+    private List<Component> getTaskTooltips(IMaidTask maidTask, boolean enable, List<Pair<String, Predicate<EntityMaid>>> enableConditionDesc) {
         List<Component> desc = ParseI18n.keysToTrans(maidTask.getDescription(maid), ChatFormatting.GRAY);
         if (!desc.isEmpty()) {
             desc.add(0, Component.translatable("task.touhou_little_maid.desc.title").withStyle(ChatFormatting.GOLD));
         }
-        if (!maidTask.isEnable(maid)) {
-            List<Pair<String, Predicate<EntityMaid>>> enableConditionDesc = maidTask.getEnableConditionDesc(maid);
+        if (!enable) {
             // 强制显示启用条件提示
             desc.add(Component.literal("\u0020"));
             desc.add(Component.translatable("task.touhou_little_maid.desc.enable_condition").withStyle(ChatFormatting.GOLD));
@@ -410,7 +463,7 @@ public abstract class AbstractMaidContainerGui<T extends AbstractMaidContainer> 
     }
 
     private void addDownloadButton() {
-        modelDownload = new MaidDownloadButton(leftPos + 20, topPos + 230, BUTTON);
+        modelDownload = new MaidDownloadButton(leftPos + 20, topPos + 230, BUTTON, this.maid);
         this.addRenderableWidget(modelDownload);
     }
 
@@ -517,7 +570,7 @@ public abstract class AbstractMaidContainerGui<T extends AbstractMaidContainer> 
         {
             graphics.blit(SIDE, leftPos + 53, topPos + 124, 9, 0, 9, 9);
             graphics.blit(SIDE, leftPos + 5, topPos + 124, 0, 9, 47, 9);
-            double armor = maid.getAttributeValue(Attributes.ARMOR) / 20;
+            double armor = Math.min(maid.getAttributeValue(Attributes.ARMOR) / 20, 1.0);
             graphics.blit(SIDE, leftPos + 7, topPos + 126, 2, 23, (int) (43 * armor), 5);
             drawNumberScale(graphics, maid.getArmorValue(), leftPos + 63, topPos + 125);
         }

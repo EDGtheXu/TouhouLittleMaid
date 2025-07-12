@@ -8,6 +8,18 @@
       "type": "spotlight",
       "item": "touhou_little_maid:keyboard,touhou_little_maid:bookshelf,touhou_little_maid:computer,touhou_little_maid:gomoku",
       "text": "patchouli.touhou_little_maid.book.entries.other.maid_joy.pages.0.text"
+    },
+    {
+      "type": "altar_recipe",
+      "recipe_id": "touhou_little_maid:altar/craft_computer"
+    },
+    {
+      "type": "altar_recipe",
+      "recipe_id": "touhou_little_maid:altar/craft_keyboard"
+    },
+    {
+      "type": "altar_recipe",
+      "recipe_id": "touhou_little_maid:altar/craft_bookshelf"
     }
   ]
 }

@@ -3,8 +3,10 @@ package com.github.tartaricacid.touhoulittlemaid.item;
 import com.github.tartaricacid.touhoulittlemaid.client.renderer.tileentity.TileEntityItemStackGarageKitRenderer;
 import com.github.tartaricacid.touhoulittlemaid.client.resource.CustomPackLoader;
 import com.github.tartaricacid.touhoulittlemaid.client.resource.pojo.MaidModelInfo;
+import com.github.tartaricacid.touhoulittlemaid.compat.ysm.YsmCompat;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.github.tartaricacid.touhoulittlemaid.init.InitBlocks;
+import com.github.tartaricacid.touhoulittlemaid.inventory.tooltip.YsmMaidInfo;
 import com.github.tartaricacid.touhoulittlemaid.util.ParseI18n;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
@@ -51,6 +53,8 @@ public class ItemGarageKit extends BlockItem {
         CompoundTag data = new CompoundTag();
         data.putString(ENTITY_ID_TAG_NAME, DEFAULT_ENTITY_ID);
         data.putString(EntityMaid.MODEL_ID_TAG, DEFAULT_MODEL_ID);
+        // 默认数据需要强制指定 YSM 渲染为空
+        data.putBoolean(EntityMaid.IS_YSM_MODEL_TAG, false);
         return data;
     }
 
@@ -73,7 +77,19 @@ public class ItemGarageKit extends BlockItem {
                 return super.getName(stack);
             }
 
-            // 如果是女仆的，直接显示人物名称
+            // 优先使用 YSM 模型名称
+            if (YsmCompat.isInstalled()) {
+                YsmMaidInfo ysmMaidInfo = YsmCompat.getYsmMaidInfo(data);
+                if (ysmMaidInfo.isYsmModel()) {
+                    MutableComponent name = ysmMaidInfo.name();
+                    if (name == null || name.equals(Component.empty())) {
+                        return prefix.append(ysmMaidInfo.modelId());
+                    }
+                    return prefix.append(name);
+                }
+            }
+
+            // 然后才是默认模型名
             String modelId = data.getString(EntityMaid.MODEL_ID_TAG);
             MaidModelInfo info = CustomPackLoader.MAID_MODELS.getInfo(modelId).orElse(null);
             if (info != null) {

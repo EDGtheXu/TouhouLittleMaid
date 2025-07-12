@@ -1,5 +1,6 @@
 package com.github.tartaricacid.touhoulittlemaid.entity.ai.brain.task;
 
+import com.github.tartaricacid.touhoulittlemaid.entity.item.EntitySit;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.github.tartaricacid.touhoulittlemaid.init.InitEntities;
 import com.google.common.collect.ImmutableMap;
@@ -72,6 +73,18 @@ public class MaidUpdateActivityFromSchedule extends Behavior<EntityMaid> {
                     brain.eraseMemory(MemoryModuleType.PATH);
                     brain.eraseMemory(MemoryModuleType.WALK_TARGET);
                     brain.setActiveActivityIfPossible(riderActivity);
+
+                    // 如果是拥有工作点的 task，需要脱离骑乘的实体
+                    if (maid.isPassenger() && !riderActivity.equals(InitEntities.RIDE_WORK.get())) {
+                        if (!maid.getTask().workPointTask(maid)) {
+                            return;
+                        }
+                        // 特殊的实体（比如娱乐工具的，就不需要脱离）
+                        if (maid.getVehicle() instanceof EntitySit) {
+                            return;
+                        }
+                        maid.stopRiding();
+                    }
                 }
             }
         } else {

@@ -1,7 +1,6 @@
 package com.github.tartaricacid.touhoulittlemaid.client.renderer.entity.geckolayer;
 
 import com.github.tartaricacid.touhoulittlemaid.api.entity.IMaid;
-import com.github.tartaricacid.touhoulittlemaid.client.renderer.entity.GeckoEntityMaidRenderer;
 import com.github.tartaricacid.touhoulittlemaid.compat.carryon.RenderFixer;
 import com.github.tartaricacid.touhoulittlemaid.compat.slashblade.SlashBladeCompat;
 import com.github.tartaricacid.touhoulittlemaid.compat.slashblade.SlashBladeRender;
@@ -9,6 +8,7 @@ import com.github.tartaricacid.touhoulittlemaid.compat.tacz.TacCompat;
 import com.github.tartaricacid.touhoulittlemaid.entity.backpack.BackpackManager;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.github.tartaricacid.touhoulittlemaid.geckolib3.geo.GeoLayerRenderer;
+import com.github.tartaricacid.touhoulittlemaid.geckolib3.geo.IGeoEntityRenderer;
 import com.github.tartaricacid.touhoulittlemaid.geckolib3.util.RenderUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
@@ -20,23 +20,28 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Vanishable;
 
-public class GeckoLayerMaidBackItem<T extends Mob> extends GeoLayerRenderer<T, GeckoEntityMaidRenderer<T>> {
-    public GeckoLayerMaidBackItem(GeckoEntityMaidRenderer<T> entityRendererIn) {
+public class GeckoLayerMaidBackItem<T extends Mob, R extends IGeoEntityRenderer<T>> extends GeoLayerRenderer<T, R> {
+    public GeckoLayerMaidBackItem(R entityRendererIn) {
         super(entityRendererIn);
     }
 
     @Override
-    public void render(PoseStack matrixStack, MultiBufferSource bufferIn, int packedLightIn, T entity, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
+    public GeoLayerRenderer<T, R> copy(R entityRendererIn) {
+        return new GeckoLayerMaidBackItem<>(entityRendererIn);
+    }
+
+    @Override
+    public void render(PoseStack matrixStack, MultiBufferSource buffer, int packedLight, T entity, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
         IMaid maid = IMaid.convert(entity);
         if (maid == null) {
             return;
         }
-        var model = this.entityRenderer.getAnimatableEntity(entity).getCurrentModel();
+        var model = this.getLocationModel(entity);
         if (model == null) {
             return;
         }
         ItemStack stack = maid.getBackpackShowItem();
-        if (!this.entityRenderer.getAnimatableEntity(entity).getMaidInfo().isShowBackpack() || entity.isSleeping() || entity.isInvisible() || RenderFixer.isCarryOnRender(stack, bufferIn)) {
+        if (!this.getGeoEntity(entity).getMaidInfo().isShowBackpack() || entity.isSleeping() || entity.isInvisible() || RenderFixer.isCarryOnRender(stack, buffer)) {
             return;
         }
         if (entity instanceof EntityMaid entityMaid && !entityMaid.getConfigManager().isShowBackItem()) {
@@ -58,15 +63,15 @@ public class GeckoLayerMaidBackItem<T extends Mob> extends GeoLayerRenderer<T, G
                 BackpackManager.getEmptyBackpack().offsetBackpackItem(matrixStack);
             }
             if (SlashBladeCompat.isSlashBladeItem(stack)) {
-                SlashBladeRender.renderGeckoMaidBackSlashBlade(matrixStack, bufferIn, packedLightIn, stack);
+                SlashBladeRender.renderGeckoMaidBackSlashBlade(matrixStack, buffer, packedLight, stack);
             } else {
-                Minecraft.getInstance().getItemRenderer().renderStatic(entity, stack, ItemDisplayContext.FIXED, false, matrixStack, bufferIn, entity.level(), packedLightIn, OverlayTexture.NO_OVERLAY, entity.getId());
+                Minecraft.getInstance().getItemRenderer().renderStatic(entity, stack, ItemDisplayContext.FIXED, false, matrixStack, buffer, entity.level(), packedLight, OverlayTexture.NO_OVERLAY, entity.getId());
             }
             matrixStack.popPose();
             return;
         }
 
         // TACZ 背部枪械渲染
-        TacCompat.renderBackGun(stack, model, maid, matrixStack, bufferIn, packedLightIn);
+        TacCompat.renderBackGun(stack, model, maid, matrixStack, buffer, packedLight);
     }
 }

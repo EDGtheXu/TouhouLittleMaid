@@ -4,7 +4,7 @@ import com.github.tartaricacid.touhoulittlemaid.api.ILittleMaid;
 import com.github.tartaricacid.touhoulittlemaid.compat.aquaculture.AquacultureCompat;
 import com.github.tartaricacid.touhoulittlemaid.config.GeneralConfig;
 import com.github.tartaricacid.touhoulittlemaid.config.ServerConfig;
-import com.github.tartaricacid.touhoulittlemaid.entity.chatbubble.ChatBubbleManger;
+import com.github.tartaricacid.touhoulittlemaid.entity.info.CommonDefaultPack;
 import com.github.tartaricacid.touhoulittlemaid.init.*;
 import com.google.common.collect.Lists;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -12,6 +12,7 @@ import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -22,14 +23,14 @@ public final class TouhouLittleMaid {
     public static final String MOD_ID = "touhou_little_maid";
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
     public static List<ILittleMaid> EXTENSIONS = Lists.newArrayList();
+    public static boolean DEBUG = !FMLEnvironment.production;
 
     public TouhouLittleMaid() {
         initRegister(FMLJavaModLoadingContext.get().getModEventBus());
         InitTrigger.init();
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, GeneralConfig.init());
         ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, ServerConfig.init());
-        ChatBubbleManger.initDefaultChat();
-
+        CommonDefaultPack.initCommonDefaultPack();
         AquacultureCompat.init();
     }
 
@@ -52,5 +53,6 @@ public final class TouhouLittleMaid {
         InitLootModifier.GLOBAL_LOOT_MODIFIER_SERIALIZER.register(eventBus);
         InitCommand.ARGUMENT_TYPE.register(eventBus);
         InitPoi.POI_TYPES.register(eventBus);
+        InitPainting.PAINTING_VARIANTS.register(eventBus);
     }
 }

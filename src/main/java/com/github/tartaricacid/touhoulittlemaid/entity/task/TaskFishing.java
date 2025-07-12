@@ -53,4 +53,9 @@ public class TaskFishing implements IMaidTask {
     public List<Pair<String, Predicate<EntityMaid>>> getConditionDescription(EntityMaid maid) {
         return Collections.singletonList(Pair.of("has_fishing_rod", e -> e.getMainHandItem().canPerformAction(ToolActions.FISHING_ROD_CAST)));
     }
+
+    @Override
+    public boolean workPointTask(EntityMaid maid) {
+        return true;
+    }
 }

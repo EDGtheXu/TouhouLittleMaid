@@ -2,6 +2,7 @@ package com.github.tartaricacid.touhoulittlemaid.entity.ai.navigation;
 
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -11,6 +12,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.WalkNodeEvaluator;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 /**
  * 该方法仅修改了栅栏门和梯子的寻路判断
@@ -103,6 +105,10 @@ public class MaidNodeEvaluator extends WalkNodeEvaluator {
     }
 
     private BlockPathTypes getMaidBlockPathTypeRaw(BlockGetter level, BlockPos pos) {
+        // 女仆在限定范围内寻路寻到了范围外，失败
+        if (this.mob instanceof EntityMaid maid && maid.isWithinRestriction() && !maid.isWithinRestriction(pos)) {
+            return BlockPathTypes.BLOCKED;
+        }
         BlockState blockState = level.getBlockState(pos);
         BlockPathTypes pathType = blockState.getBlockPathType(level, pos, null);
         if (pathType != null) {
@@ -116,11 +122,22 @@ public class MaidNodeEvaluator extends WalkNodeEvaluator {
             pathType = BlockPathTypes.WALKABLE;
         } else {
             pathType = WalkNodeEvaluator.getBlockPathTypeRaw(level, pos);
+            // 判断目标方块的碰撞高度。有些半透明方块拥有超过 0.5（台阶）的高度，此时女仆是不能从其中穿过的，需要将其视为不可通行方块
+            if (!heightCheckExclusions(pathType)) {
+                VoxelShape shape = blockState.getCollisionShape(level, pos);
+                if (pathType != BlockPathTypes.BLOCKED && shape.max(Direction.Axis.Y) - shape.min(Direction.Axis.Y) > 0.5) {
+                    pathType = BlockPathTypes.BLOCKED;
+                }
+            }
         }
         if (pathType == BlockPathTypes.DOOR_WOOD_CLOSED && this.mob instanceof EntityMaid maid && !this.canOpenDoor(blockState.getBlock(), maid)) {
             pathType = BlockPathTypes.DOOR_IRON_CLOSED;
         }
         return pathType;
+    }
+
+    private boolean heightCheckExclusions(BlockPathTypes pathType) {
+        return pathType == BlockPathTypes.DOOR_OPEN || pathType == BlockPathTypes.DOOR_WOOD_CLOSED;
     }
 
     private boolean canOpenDoor(Block block, EntityMaid maid) {

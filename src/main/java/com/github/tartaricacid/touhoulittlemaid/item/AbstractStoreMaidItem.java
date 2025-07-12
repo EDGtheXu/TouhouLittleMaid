@@ -1,7 +1,9 @@
 package com.github.tartaricacid.touhoulittlemaid.item;
 
+import com.github.tartaricacid.touhoulittlemaid.compat.ysm.YsmCompat;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.github.tartaricacid.touhoulittlemaid.inventory.tooltip.ItemMaidTooltip;
+import com.github.tartaricacid.touhoulittlemaid.inventory.tooltip.YsmMaidInfo;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -50,6 +52,7 @@ public abstract class AbstractStoreMaidItem extends Item {
         return super.onEntityItemUpdate(stack, entity);
     }
 
+    @Override
     public Optional<TooltipComponent> getTooltipImage(ItemStack stack) {
         CompoundTag maidData = getMaidData(stack);
         if (maidData.contains(EntityMaid.MODEL_ID_TAG, Tag.TAG_STRING)) {
@@ -58,7 +61,9 @@ public abstract class AbstractStoreMaidItem extends Item {
             if (maidData.contains(CUSTOM_NAME, Tag.TAG_STRING)) {
                 customName = maidData.getString(CUSTOM_NAME);
             }
-            return Optional.of(new ItemMaidTooltip(modelId, customName));
+            // YSM 渲染相关数据
+            YsmMaidInfo ysmMaidInfo = YsmCompat.getYsmMaidInfo(maidData);
+            return Optional.of(new ItemMaidTooltip(modelId, customName, ysmMaidInfo));
         }
         return Optional.empty();
     }

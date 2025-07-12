@@ -23,6 +23,14 @@
     {
       "type": "text",
       "text": "patchouli.touhou_little_maid.book.entries.overview.multiblocks_altar.pages.3.text"
+    },
+    {
+      "type": "altar_recipe",
+      "recipe_id": "touhou_little_maid:altar/spawn_box"
+    },
+    {
+      "type": "altar_recipe",
+      "recipe_id": "touhou_little_maid:altar/reborn_maid"
     }
   ]
 }

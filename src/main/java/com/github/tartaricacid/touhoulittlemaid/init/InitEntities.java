@@ -5,7 +5,7 @@ import com.github.tartaricacid.touhoulittlemaid.entity.ai.brain.MaidSchedule;
 import com.github.tartaricacid.touhoulittlemaid.entity.ai.brain.sensor.MaidHostilesSensor;
 import com.github.tartaricacid.touhoulittlemaid.entity.ai.brain.sensor.MaidNearestLivingEntitySensor;
 import com.github.tartaricacid.touhoulittlemaid.entity.ai.brain.sensor.MaidPickupEntitiesSensor;
-import com.github.tartaricacid.touhoulittlemaid.entity.chatbubble.MaidChatBubbles;
+import com.github.tartaricacid.touhoulittlemaid.entity.chatbubble.ChatBubbleRegister;
 import com.github.tartaricacid.touhoulittlemaid.entity.item.*;
 import com.github.tartaricacid.touhoulittlemaid.entity.monster.EntityFairy;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
@@ -24,7 +24,6 @@ import net.minecraft.world.entity.ai.sensing.SensorType;
 import net.minecraft.world.entity.schedule.Activity;
 import net.minecraft.world.entity.schedule.Schedule;
 import net.minecraft.world.entity.schedule.ScheduleBuilder;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -66,7 +65,6 @@ public final class InitEntities {
 
     public static RegistryObject<MemoryModuleType<List<Entity>>> VISIBLE_PICKUP_ENTITIES = MEMORY_MODULE_TYPES.register("visible_pickup_entities", () -> new MemoryModuleType<>(Optional.empty()));
     public static RegistryObject<MemoryModuleType<PositionTracker>> TARGET_POS = MEMORY_MODULE_TYPES.register("target_pos", () -> new MemoryModuleType<>(Optional.empty()));
-    public static RegistryObject<MemoryModuleType<ItemStack>> CURRENT_ITEMSTACK = MEMORY_MODULE_TYPES.register("current_itemstack", () -> new MemoryModuleType<>(Optional.empty()));
     public static RegistryObject<SensorType<MaidNearestLivingEntitySensor>> MAID_NEAREST_LIVING_ENTITY_SENSOR = SENSOR_TYPES.register("maid_nearest_living_entity", () -> new SensorType<>(MaidNearestLivingEntitySensor::new));
     public static RegistryObject<SensorType<MaidHostilesSensor>> MAID_HOSTILES_SENSOR = SENSOR_TYPES.register("maid_hostiles", () -> new SensorType<>(MaidHostilesSensor::new));
     public static RegistryObject<SensorType<MaidPickupEntitiesSensor>> MAID_PICKUP_ENTITIES_SENSOR = SENSOR_TYPES.register("maid_pickup_entities", () -> new SensorType<>(MaidPickupEntitiesSensor::new));
@@ -95,7 +93,7 @@ public final class InitEntities {
     public static RegistryObject<Schedule> MAID_ALL_DAY_SCHEDULES = SCHEDULES.register("maid_all_day_schedules",
             () -> new ScheduleBuilder(new Schedule()).changeActivityAt(0, Activity.WORK).build());
     public static RegistryObject<EntityDataSerializer<?>> MAID_SCHEDULE_DATA_SERIALIZERS = DATA_SERIALIZERS.register("maid_schedule", () -> MaidSchedule.DATA);
-    public static RegistryObject<EntityDataSerializer<?>> MAID_CHAT_BUBBLE_DATA_SERIALIZERS = DATA_SERIALIZERS.register("maid_chat_bubble", () -> MaidChatBubbles.DATA);
+    public static RegistryObject<EntityDataSerializer<?>> MAID_CHAT_BUBBLE_DATA_SERIALIZERS = DATA_SERIALIZERS.register("maid_chat_bubble", () -> ChatBubbleRegister.INSTANCE);
 
     @SubscribeEvent
     public static void addEntityAttributeEvent(EntityAttributeCreationEvent event) {

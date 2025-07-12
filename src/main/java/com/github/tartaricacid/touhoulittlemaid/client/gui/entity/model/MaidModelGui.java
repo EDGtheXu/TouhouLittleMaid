@@ -7,6 +7,7 @@ import com.github.tartaricacid.touhoulittlemaid.config.subconfig.MiscConfig;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.github.tartaricacid.touhoulittlemaid.network.NetworkHandler;
 import com.github.tartaricacid.touhoulittlemaid.network.message.MaidModelMessage;
+import com.github.tartaricacid.touhoulittlemaid.network.message.OpenMaidGuiMessage;
 import com.github.tartaricacid.touhoulittlemaid.network.message.SetMaidSoundIdMessage;
 import com.github.tartaricacid.touhoulittlemaid.util.EntityCacheUtil;
 import net.minecraft.ChatFormatting;
@@ -136,6 +137,15 @@ public class MaidModelGui extends AbstractModelGui<EntityMaid, MaidModelInfo> {
         } else {
             maid.setModelId(modelItem.getModelId().toString());
         }
+        // 女仆换皮肤界面需要指定 YSM 渲染为空
+        maid.setIsYsmModel(false);
         InventoryScreen.renderEntityInInventoryFollowsMouse(graphics, posX, posY, (int) (12 * modelItem.getRenderItemScale()), -25, -20, maid);
+    }
+
+    @Override
+    protected void onClickCloseButton() {
+        if (this.entity != null) {
+            NetworkHandler.CHANNEL.sendToServer(new OpenMaidGuiMessage(this.entity.getId()));
+        }
     }
 }

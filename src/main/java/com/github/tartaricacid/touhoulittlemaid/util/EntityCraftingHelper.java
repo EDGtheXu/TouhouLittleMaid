@@ -4,9 +4,11 @@ import com.google.gson.*;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.TagParser;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
@@ -52,6 +54,26 @@ public final class EntityCraftingHelper {
         } catch (CommandSyntaxException e) {
             throw new JsonSyntaxException("Invalid NBT Entry: " + e.toString());
         }
+    }
+
+    public static JsonObject writeEntityData(Output output) {
+        JsonObject json = new JsonObject();
+        ResourceLocation key = ForgeRegistries.ENTITY_TYPES.getKey(output.type);
+        if (key == null) {
+            throw new JsonParseException("Entity Type Not Found: " + output.type);
+        }
+        json.addProperty(TYPE_TAG, key.toString());
+        NBTToJson.getJson(output.getData()).ifPresent(e -> json.add(NBT_TAG, e));
+
+        if (!output.getCopyInput().isEmpty()) {
+            JsonObject copyObject = new JsonObject();
+            copyObject.add(INGREDIENT_TAG, output.getCopyInput().toJson());
+            if (StringUtils.isNotBlank(output.getCopyTag())) {
+                copyObject.addProperty(TAG_TAG, output.getCopyTag());
+            }
+            json.add(COPY_TAG, copyObject);
+        }
+        return json;
     }
 
     public static class Output {

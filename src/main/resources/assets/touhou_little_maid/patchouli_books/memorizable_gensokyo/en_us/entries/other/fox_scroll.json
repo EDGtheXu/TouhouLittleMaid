@@ -14,6 +14,14 @@
       "images": [
         "touhou_little_maid:textures/book/fox_scroll.png"
       ]
+    },
+    {
+      "type": "altar_recipe",
+      "recipe_id": "touhou_little_maid:altar/craft_red_fox_scroll"
+    },
+    {
+      "type": "altar_recipe",
+      "recipe_id": "touhou_little_maid:altar/craft_white_fox_scroll"
     }
   ]
 }

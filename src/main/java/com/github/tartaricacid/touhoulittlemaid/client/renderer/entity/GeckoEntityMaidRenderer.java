@@ -6,18 +6,21 @@ import com.github.tartaricacid.touhoulittlemaid.api.entity.IMaid;
 import com.github.tartaricacid.touhoulittlemaid.capability.GeckoMaidEntityCapabilityProvider;
 import com.github.tartaricacid.touhoulittlemaid.client.entity.GeckoMaidEntity;
 import com.github.tartaricacid.touhoulittlemaid.client.renderer.entity.geckolayer.*;
+import com.github.tartaricacid.touhoulittlemaid.geckolib3.geo.GeoLayerRenderer;
 import com.github.tartaricacid.touhoulittlemaid.geckolib3.geo.GeoReplacedEntityRenderer;
+import com.github.tartaricacid.touhoulittlemaid.geckolib3.geo.IGeoEntity;
+import com.github.tartaricacid.touhoulittlemaid.geckolib3.geo.IGeoEntityRenderer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.world.entity.Mob;
 
-public class GeckoEntityMaidRenderer<T extends Mob> extends GeoReplacedEntityRenderer<T, GeckoMaidEntity<T>> {
+public class GeckoEntityMaidRenderer<T extends Mob> extends GeoReplacedEntityRenderer<T, GeckoMaidEntity<T>> implements IGeoEntityRenderer<T> {
     public GeckoEntityMaidRenderer(EntityRendererProvider.Context renderManager) {
         super(renderManager);
         addLayer(new GeckoLayerMaidHeld<>(this, renderManager.getItemInHandRenderer()));
         addLayer(new GeckoLayerMaidBipedHead<>(this, renderManager.getModelSet()));
-        addLayer(new GeckoLayerMaidBackpack<>(this, renderManager.getModelSet()));
+        addLayer(new GeckoLayerMaidBackpack<>(this));
         addLayer(new GeckoLayerMaidBackItem<>(this));
         addLayer(new GeckoLayerMaidBanner<>(this, renderManager.getModelSet()));
         addAdditionGeckoEntityMaidRenderer(renderManager);
@@ -34,7 +37,8 @@ public class GeckoEntityMaidRenderer<T extends Mob> extends GeoReplacedEntityRen
     @Override
     @SuppressWarnings("unchecked")
     public GeckoMaidEntity<T> getAnimatableEntity(T entity) {
-        return entity.getCapability(GeckoMaidEntityCapabilityProvider.CAP).map(e -> (GeckoMaidEntity<T>) e).orElse(new GeckoMaidEntity<>(entity, IMaid.convert(entity)));
+        return entity.getCapability(GeckoMaidEntityCapabilityProvider.CAP).map(e -> (GeckoMaidEntity<T>) e)
+                .orElseGet(() -> new GeckoMaidEntity<>(entity, IMaid.convert(entity)));
     }
 
     @Override
@@ -51,5 +55,21 @@ public class GeckoEntityMaidRenderer<T extends Mob> extends GeoReplacedEntityRen
         for (ILittleMaid littleMaid : TouhouLittleMaid.EXTENSIONS) {
             littleMaid.addAdditionGeckoMaidLayer(this, renderManager);
         }
+    }
+
+    @Override
+    public IGeoEntity getGeoEntity(T entity) {
+        return this.getAnimatableEntity(entity);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void addGeoLayerRenderer(GeoLayerRenderer<?, ?> geoLayerMaidRender2) {
+        this.addLayer((GeoLayerRenderer<T, ?>) geoLayerMaidRender2);
+    }
+
+    @Override
+    public void geoRender(T entity, float entityYaw, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
+        this.render(entity, entityYaw, partialTick, poseStack, bufferSource, packedLight);
     }
 }

@@ -15,6 +15,18 @@
         "touhou_little_maid:textures/book/backpack.png"
       ],
       "text": "patchouli.touhou_little_maid.book.entries.maid.backpack.pages.1.text"
+    },
+    {
+      "type": "altar_recipe",
+      "recipe_id": "touhou_little_maid:altar/craft_maid_backpack_big"
+    },
+    {
+      "type": "altar_recipe",
+      "recipe_id": "touhou_little_maid:altar/craft_maid_backpack_middle"
+    },
+    {
+      "type": "altar_recipe",
+      "recipe_id": "touhou_little_maid:altar/craft_maid_backpack_small"
     }
   ]
 }

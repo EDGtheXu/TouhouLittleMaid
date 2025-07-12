@@ -51,6 +51,8 @@ public final class InitSounds {
     public static final RegistryObject<SoundEvent> FAIRY_AMBIENT = registerSound("entity.fairy.ambient");
     public static final RegistryObject<SoundEvent> FAIRY_DEATH = registerSound("entity.fairy.death");
     public static final RegistryObject<SoundEvent> FAIRY_HURT = registerSound("entity.fairy.hurt");
+    public static final RegistryObject<SoundEvent> RECORDING_START = registerSound("ui.recording_start");
+    public static final RegistryObject<SoundEvent> RECORDING_END = registerSound("ui.recording_end");
 
     private static RegistryObject<SoundEvent> registerSound(String name) {
         return SOUNDS.register(name, () -> SoundEvent.createFixedRangeEvent(new ResourceLocation(TouhouLittleMaid.MOD_ID, name), 16.0F));

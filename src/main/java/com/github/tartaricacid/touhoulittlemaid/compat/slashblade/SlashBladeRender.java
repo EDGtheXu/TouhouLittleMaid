@@ -1,7 +1,7 @@
 package com.github.tartaricacid.touhoulittlemaid.compat.slashblade;
 
 import com.github.tartaricacid.touhoulittlemaid.client.model.bedrock.BedrockModel;
-import com.github.tartaricacid.touhoulittlemaid.geckolib3.geo.animated.AnimatedGeoModel;
+import com.github.tartaricacid.touhoulittlemaid.geckolib3.geo.animated.ILocationModel;
 import com.github.tartaricacid.touhoulittlemaid.geckolib3.util.RenderUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
@@ -99,7 +99,7 @@ public class SlashBladeRender {
         }
     }
 
-    public static void renderMaidMainhandSlashBlade(LivingEntity maid, AnimatedGeoModel model, PoseStack matrixStack, MultiBufferSource bufferIn, int lightIn, ItemStack stack, float partialTicks) {
+    public static void renderMaidMainhandSlashBlade(LivingEntity maid, ILocationModel model, PoseStack matrixStack, MultiBufferSource bufferIn, int lightIn, ItemStack stack, float partialTicks) {
         if (stack.getItem() instanceof ItemSlashBlade) {
             matrixStack.pushPose();
             // 主手的刀渲染在左边
@@ -159,7 +159,7 @@ public class SlashBladeRender {
         }
     }
 
-    public static void renderMaidOffhandSlashBlade(AnimatedGeoModel model, PoseStack matrixStack, MultiBufferSource bufferIn, int lightIn, ItemStack stack) {
+    public static void renderMaidOffhandSlashBlade(ILocationModel model, PoseStack matrixStack, MultiBufferSource bufferIn, int lightIn, ItemStack stack) {
         if (stack.getItem() instanceof ItemSlashBlade) {
             matrixStack.pushPose();
             // 副手的刀渲染在右边
@@ -178,7 +178,7 @@ public class SlashBladeRender {
         }
     }
 
-    private static void translateToWaist(HumanoidArm arm, PoseStack poseStack, AnimatedGeoModel geoModel) {
+    private static void translateToWaist(HumanoidArm arm, PoseStack poseStack, ILocationModel geoModel) {
         if (arm == HumanoidArm.LEFT) {
             RenderUtils.prepMatrixForLocator(poseStack, geoModel.leftWaistBones());
         } else {

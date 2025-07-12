@@ -13,7 +13,7 @@ import com.github.tartaricacid.touhoulittlemaid.entity.task.TaskManager;
 import com.github.tartaricacid.touhoulittlemaid.geckolib3.core.PlayState;
 import com.github.tartaricacid.touhoulittlemaid.geckolib3.core.builder.ILoopType;
 import com.github.tartaricacid.touhoulittlemaid.geckolib3.core.event.predicate.AnimationEvent;
-import com.github.tartaricacid.touhoulittlemaid.geckolib3.geo.animated.AnimatedGeoModel;
+import com.github.tartaricacid.touhoulittlemaid.geckolib3.geo.animated.ILocationModel;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.resources.ResourceLocation;
@@ -26,6 +26,7 @@ import net.minecraftforge.fml.ModList;
 import javax.annotation.Nullable;
 
 public class TacCompat {
+    public static final ResourceLocation MINIGUN_ID = new ResourceLocation("tacz", "minigun");
     private static final String TACZ_ID = "tacz";
     private static boolean INSTALLED = false;
 
@@ -36,6 +37,10 @@ public class TacCompat {
             manager.add(new TaskGunAttack());
             INSTALLED = true;
         }
+    }
+
+    public static boolean isInstalled() {
+        return INSTALLED;
     }
 
     public static boolean isGun(ItemStack stack) {
@@ -59,9 +64,9 @@ public class TacCompat {
     }
 
     @OnlyIn(Dist.CLIENT)
-    public static boolean onSwingGun(IMaid maid, @Nullable ModelRendererWrapper armLeft, @Nullable ModelRendererWrapper armRight) {
+    public static boolean onHoldGun(IMaid maid, @Nullable ModelRendererWrapper armLeft, @Nullable ModelRendererWrapper armRight) {
         if (INSTALLED) {
-            return GunBaseAnimation.onSwingGun(maid, armLeft, armRight);
+            return GunBaseAnimation.onHoldGun(maid, armLeft, armRight);
         }
         return false;
     }
@@ -81,7 +86,7 @@ public class TacCompat {
     }
 
     @OnlyIn(Dist.CLIENT)
-    public static void renderBackGun(ItemStack offhandItem, AnimatedGeoModel geoModel, IMaid maid, PoseStack poseStack, MultiBufferSource bufferIn, int packedLight) {
+    public static void renderBackGun(ItemStack offhandItem, ILocationModel geoModel, IMaid maid, PoseStack poseStack, MultiBufferSource bufferIn, int packedLight) {
         if (INSTALLED && isGun(offhandItem)) {
             poseStack.pushPose();
             GunMaidRender.renderBackGun(offhandItem, geoModel, maid, poseStack, bufferIn, packedLight);

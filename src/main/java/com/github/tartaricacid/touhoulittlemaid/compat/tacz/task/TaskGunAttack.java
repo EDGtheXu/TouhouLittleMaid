@@ -128,10 +128,11 @@ public class TaskGunAttack implements IRangedAttackTask {
                 if (sniper.equals(type)) {
                     return targetConditionsTest(maid, target, MaidConfig.MAID_GUN_LONG_DISTANCE);
                 }
-                // 霰弹枪？手枪？近距离模式
+                // 霰弹枪？手枪？冲锋枪？近距离模式
                 String shotgun = GunTabType.SHOTGUN.name().toLowerCase(Locale.ENGLISH);
                 String pistol = GunTabType.PISTOL.name().toLowerCase(Locale.ENGLISH);
-                if (shotgun.equals(type) || pistol.equals(type)) {
+                String smg = GunTabType.SMG.name().toLowerCase(Locale.ENGLISH);
+                if (shotgun.equals(type) || pistol.equals(type) || smg.equals(type)) {
                     return targetConditionsTest(maid, target, MaidConfig.MAID_GUN_NEAR_DISTANCE);
                 }
                 // 其他情况，中等距离
@@ -144,6 +145,11 @@ public class TaskGunAttack implements IRangedAttackTask {
     @Override
     public List<Pair<String, Predicate<EntityMaid>>> getConditionDescription(EntityMaid maid) {
         return Collections.singletonList(Pair.of("has_tacz_gun", this::mainhandHoldGun));
+    }
+
+    @Override
+    public boolean isWeapon(EntityMaid maid, ItemStack stack) {
+        return stack.getItem() instanceof IGun;
     }
 
     private boolean mainhandHoldGun(EntityMaid maid) {

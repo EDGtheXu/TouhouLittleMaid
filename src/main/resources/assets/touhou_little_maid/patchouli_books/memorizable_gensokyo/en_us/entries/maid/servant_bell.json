@@ -8,6 +8,10 @@
       "type": "spotlight",
       "item": "touhou_little_maid:servant_bell",
       "text": "patchouli.touhou_little_maid.book.entries.maid.servant_bell.pages.0.text"
+    },
+    {
+      "type": "altar_recipe",
+      "recipe_id": "touhou_little_maid:altar/servant_bell"
     }
   ]
 }

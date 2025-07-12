@@ -14,6 +14,22 @@
       "images": [
         "touhou_little_maid:textures/book/other_backpack.png"
       ]
+    },
+    {
+      "type": "altar_recipe",
+      "recipe_id": "touhou_little_maid:altar/craft_crafting_table_backpack"
+    },
+    {
+      "type": "altar_recipe",
+      "recipe_id": "touhou_little_maid:altar/craft_ender_chest_backpack"
+    },
+    {
+      "type": "altar_recipe",
+      "recipe_id": "touhou_little_maid:altar/craft_furnace_backpack"
+    },
+    {
+      "type": "altar_recipe",
+      "recipe_id": "touhou_little_maid:altar/craft_tank_backpack"
     }
   ]
 }

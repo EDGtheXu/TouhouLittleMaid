@@ -11,6 +11,7 @@ import com.github.tartaricacid.touhoulittlemaid.client.sound.pojo.SoundPackInfo;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.github.tartaricacid.touhoulittlemaid.init.InitSounds;
 import com.github.tartaricacid.touhoulittlemaid.network.NetworkHandler;
+import com.github.tartaricacid.touhoulittlemaid.network.message.OpenMaidGuiMessage;
 import com.github.tartaricacid.touhoulittlemaid.network.message.SetMaidSoundIdMessage;
 import com.github.tartaricacid.touhoulittlemaid.util.ParseI18n;
 import com.mojang.blaze3d.systems.RenderSystem;

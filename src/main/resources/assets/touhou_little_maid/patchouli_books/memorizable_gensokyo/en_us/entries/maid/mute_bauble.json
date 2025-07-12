@@ -8,6 +8,10 @@
       "type": "spotlight",
       "item": "touhou_little_maid:mute_bauble",
       "text": "patchouli.touhou_little_maid.book.entries.maid.mute_bauble.pages.0.text"
+    },
+    {
+      "type": "altar_recipe",
+      "recipe_id": "touhou_little_maid:altar/craft_mute_bauble"
     }
   ]
 }

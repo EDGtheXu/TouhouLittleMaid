@@ -2,8 +2,10 @@ package com.github.tartaricacid.touhoulittlemaid.client.tooltip;
 
 import com.github.tartaricacid.touhoulittlemaid.client.resource.CustomPackLoader;
 import com.github.tartaricacid.touhoulittlemaid.client.resource.pojo.MaidModelInfo;
+import com.github.tartaricacid.touhoulittlemaid.compat.ysm.YsmCompat;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.github.tartaricacid.touhoulittlemaid.inventory.tooltip.ItemMaidTooltip;
+import com.github.tartaricacid.touhoulittlemaid.inventory.tooltip.YsmMaidInfo;
 import com.github.tartaricacid.touhoulittlemaid.util.EntityCacheUtil;
 import com.github.tartaricacid.touhoulittlemaid.util.ParseI18n;
 import net.minecraft.ChatFormatting;
@@ -28,13 +30,32 @@ import static com.github.tartaricacid.touhoulittlemaid.util.EntityCacheUtil.clea
 
 public class ClientMaidTooltip implements ClientTooltipComponent {
     private final @Nullable MaidModelInfo info;
+    private final YsmMaidInfo ysmMaidInfo;
     private final MutableComponent name;
     private final String customName;
 
     public ClientMaidTooltip(ItemMaidTooltip tooltip) {
         this.info = CustomPackLoader.MAID_MODELS.getInfo(tooltip.modelId()).orElse(null);
-        this.name = (this.info == null ? Component.empty() : Component.translatable(ParseI18n.getI18nKey(info.getName())));
+        this.ysmMaidInfo = tooltip.ysmMaidInfo();
+        this.name = getName(this.info, this.ysmMaidInfo);
         this.customName = tooltip.customName();
+    }
+
+    public MutableComponent getName(MaidModelInfo info, YsmMaidInfo ysmMaidInfo) {
+        // 优先使用 YSM 模型名称
+        if (YsmCompat.isInstalled() && ysmMaidInfo.isYsmModel()) {
+            MutableComponent name = ysmMaidInfo.name();
+            if (name.equals(Component.empty())) {
+                return Component.literal(ysmMaidInfo.modelId());
+            }
+            return name;
+        }
+
+        // 然后才是默认模型名
+        if (info == null) {
+            return Component.empty();
+        }
+        return Component.translatable(ParseI18n.getI18nKey(info.getName()));
     }
 
     @Override
@@ -92,6 +113,14 @@ public class ClientMaidTooltip implements ClientTooltipComponent {
             maid.setModelId(EASTER_EGG_MODEL);
         } else {
             maid.setModelId(info.getModelId().toString());
+        }
+
+        // YSM 渲染运用
+        if (YsmCompat.isInstalled() && ysmMaidInfo.isYsmModel()) {
+            maid.setIsYsmModel(true);
+            maid.setYsmModel(ysmMaidInfo.modelId(), ysmMaidInfo.textureId(), ysmMaidInfo.name());
+        } else {
+            maid.setIsYsmModel(false);
         }
 
         guiGraphics.enableScissor(pX, posY - 50, pX + width, posY);

@@ -12,6 +12,10 @@
     {
       "type": "text",
       "text": "patchouli.touhou_little_maid.book.entries.other.chisel_and_statues.pages.1.text"
+    },
+    {
+      "type": "altar_recipe",
+      "recipe_id": "touhou_little_maid:altar/craft_chisel"
     }
   ]
 }

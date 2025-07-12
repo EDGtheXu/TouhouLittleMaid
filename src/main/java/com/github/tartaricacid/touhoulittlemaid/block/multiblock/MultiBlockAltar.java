@@ -2,6 +2,7 @@ package com.github.tartaricacid.touhoulittlemaid.block.multiblock;
 
 import com.github.tartaricacid.touhoulittlemaid.TouhouLittleMaid;
 import com.github.tartaricacid.touhoulittlemaid.api.block.IMultiBlock;
+import com.github.tartaricacid.touhoulittlemaid.datagen.tag.TagBlock;
 import com.github.tartaricacid.touhoulittlemaid.init.InitBlocks;
 import com.github.tartaricacid.touhoulittlemaid.tileentity.TileEntityAltar;
 import com.github.tartaricacid.touhoulittlemaid.util.PosListData;
@@ -29,7 +30,7 @@ public class MultiBlockAltar implements IMultiBlock {
 
     @Override
     public boolean isCoreBlock(BlockState blockState) {
-        return blockState.is(Blocks.RED_WOOL);
+        return blockState.is(TagBlock.ALTAR_TORII);
     }
 
     @Override
@@ -38,9 +39,15 @@ public class MultiBlockAltar implements IMultiBlock {
         for (StructureTemplate.StructureBlockInfo blockInfo : palette.blocks()) {
             BlockState worldState = world.getBlockState(posStart.offset(blockInfo.pos()));
             BlockState infoState = blockInfo.state();
-            // 如果是木头，只检查 tag
+            // 橡木部分 -> 御柱
             if (infoState.is(Blocks.OAK_LOG)) {
-                if (!worldState.is(BlockTags.LOGS)) {
+                if (!worldState.is(TagBlock.ALTAR_PILLAR)) {
+                    return false;
+                }
+            }
+            // 羊毛部分 -> 鸟居
+            else if (infoState.is(Blocks.RED_WOOL)) {
+                if (!worldState.is(TagBlock.ALTAR_TORII)) {
                     return false;
                 }
             }
@@ -60,7 +67,7 @@ public class MultiBlockAltar implements IMultiBlock {
 
         for (StructureTemplate.StructureBlockInfo blockInfo : palette.blocks()) {
             posList.add(posStart.offset(blockInfo.pos()));
-            if (blockInfo.pos().getY() == 2 && blockInfo.state().is(BlockTags.LOGS)) {
+            if (blockInfo.pos().getY() == 2 && blockInfo.state().is(Blocks.OAK_LOG)) {
                 canPlaceItemPosList.add(posStart.offset(blockInfo.pos()));
             }
         }
@@ -71,10 +78,10 @@ public class MultiBlockAltar implements IMultiBlock {
             BlockState currentState = worldIn.getBlockState(currentPos);
             worldIn.setBlock(currentPos, InitBlocks.ALTAR.get().defaultBlockState(), Block.UPDATE_ALL);
             BlockEntity te = worldIn.getBlockEntity(currentPos);
-            if (te instanceof TileEntityAltar) {
+            if (te instanceof TileEntityAltar altar) {
                 boolean isRender = currentPos.equals(currentCenterPos);
-                boolean canPlaceItem = blockInfo.pos().getY() == 2 && blockInfo.state().is(BlockTags.LOGS);
-                ((TileEntityAltar) te).setForgeData(currentState, isRender,
+                boolean canPlaceItem = blockInfo.pos().getY() == 2 && blockInfo.state().is(Blocks.OAK_LOG);
+                altar.setForgeData(currentState, isRender,
                         canPlaceItem, direction, posList, canPlaceItemPosList);
             }
         }

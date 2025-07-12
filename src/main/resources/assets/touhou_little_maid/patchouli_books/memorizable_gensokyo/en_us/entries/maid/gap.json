@@ -8,6 +8,10 @@
       "type": "spotlight",
       "item": "touhou_little_maid:wireless_io",
       "text": "patchouli.touhou_little_maid.book.entries.maid.gap.pages.0.text"
+    },
+    {
+      "type": "altar_recipe",
+      "recipe_id": "touhou_little_maid:altar/craft_wireless_io"
     }
   ]
 }

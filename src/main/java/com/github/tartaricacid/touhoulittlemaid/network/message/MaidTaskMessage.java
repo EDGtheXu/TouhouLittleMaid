@@ -1,6 +1,7 @@
 package com.github.tartaricacid.touhoulittlemaid.network.message;
 
 import com.github.tartaricacid.touhoulittlemaid.advancements.maid.TriggerType;
+import com.github.tartaricacid.touhoulittlemaid.api.event.MaidTaskEnableEvent;
 import com.github.tartaricacid.touhoulittlemaid.api.task.IMaidTask;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.TabIndex;
@@ -11,6 +12,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
@@ -44,6 +46,9 @@ public class MaidTaskMessage {
                 Entity entity = sender.level.getEntity(message.id);
                 if (entity instanceof EntityMaid maid && maid.isOwnedBy(sender)) {
                     IMaidTask task = TaskManager.findTask(message.uid).orElse(TaskManager.getIdleTask());
+                    if (task != TaskManager.getIdleTask() && MinecraftForge.EVENT_BUS.post(new MaidTaskEnableEvent(task, maid))) {
+                        return;
+                    }
                     if (!task.isEnable(maid)) {
                         return;
                     }

@@ -6,6 +6,7 @@ import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.github.tartaricacid.touhoulittlemaid.item.*;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Rarity;
 import net.minecraftforge.common.ForgeSpawnEggItem;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -63,18 +64,19 @@ public final class InitItems {
     public static RegistryObject<Item> FAVORABILITY_TOOL_ADD = ITEMS.register("favorability_tool_add", () -> new ItemFavorabilityTool("add"));
     public static RegistryObject<Item> FAVORABILITY_TOOL_REDUCE = ITEMS.register("favorability_tool_reduce", () -> new ItemFavorabilityTool("reduce"));
     public static RegistryObject<Item> FAVORABILITY_TOOL_FULL = ITEMS.register("favorability_tool_full", () -> new ItemFavorabilityTool("full"));
-    public static RegistryObject<Item> SHRINE = ITEMS.register("shrine", () -> new BlockItem(InitBlocks.SHRINE.get(), new Item.Properties()));
+    public static RegistryObject<Item> SHRINE = ITEMS.register("shrine", () -> new BlockItem(InitBlocks.SHRINE.get(), new Item.Properties().rarity(Rarity.RARE)));
     public static RegistryObject<Item> KAPPA_COMPASS = ITEMS.register("kappa_compass", ItemKappaCompass::new);
     public static RegistryObject<Item> BROOM = ITEMS.register("broom", ItemBroom::new);
     public static RegistryObject<Item> PICNIC_BASKET = ITEMS.register("picnic_basket", () -> new ItemPicnicBasket(InitBlocks.PICNIC_MAT.get()));
     public static RegistryObject<Item> SCARECROW = ITEMS.register("scarecrow", () -> new BlockItem(InitBlocks.SCARECROW.get(), new Item.Properties()));
     public static RegistryObject<Item> SERVANT_BELL = ITEMS.register("servant_bell", ItemServantBell::new);
     public static RegistryObject<Item> ENTITY_ID_COPY = ITEMS.register("entity_id_copy", ItemEntityIdCopy::new);
+    public static RegistryObject<Item> OWNER_CONVERSION_TOOL = ITEMS.register("owner_conversion_tool", () -> new Item(new Item.Properties().stacksTo(1).rarity(Rarity.EPIC)));
     @SuppressWarnings("deprecation")
     public static RegistryObject<Item> MONSTER_LIST = ITEMS.register("monster_list", ItemMonsterList::new);
 
-    public static RegistryObject<Item> MAID_SPAWN_EGG = ITEMS.register("maid_spawn_egg", () -> new ForgeSpawnEggItem(() -> EntityMaid.TYPE, 0x4a6195, 0xffffff, new Item.Properties()));
-    public static RegistryObject<Item> FAIRY_SPAWN_EGG = ITEMS.register("fairy_spawn_egg", () -> new ForgeSpawnEggItem(() -> EntityFairy.TYPE, 0x171c20, 0xffffff, new Item.Properties()));
+    public static RegistryObject<Item> MAID_SPAWN_EGG = ITEMS.register("maid_spawn_egg", () -> new ForgeSpawnEggItem(() -> EntityMaid.TYPE, 0xffffff, 0xffffff, new Item.Properties()));
+    public static RegistryObject<Item> FAIRY_SPAWN_EGG = ITEMS.register("fairy_spawn_egg", () -> new ForgeSpawnEggItem(() -> EntityFairy.TYPE, 0xffffff, 0xffffff, new Item.Properties()));
 
     // 成就图标
     public static RegistryObject<Item> CHANGE_CHAIR_MODEL = ITEMS.register("change_chair_model", ItemAdvancementIcon::new);

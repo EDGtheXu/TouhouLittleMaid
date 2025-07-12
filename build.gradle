@@ -11,9 +11,8 @@ buildscript {
         gradlePluginPortal()
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '[6.0,6.2)', changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '[6.0.16,6.2)', changing: true
         classpath 'org.parchmentmc:librarian:1.+'
-        classpath 'gradle.plugin.com.github.johnrengelman:shadow:7.1.2'
         classpath group: 'org.spongepowered', name: 'mixingradle', version: '0.7-SNAPSHOT'
     }
 }
@@ -24,7 +23,6 @@ apply plugin: 'org.parchmentmc.librarian.forgegradle'
 apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'java'
 apply plugin: 'idea'
-apply plugin: 'com.github.johnrengelman.shadow'
 
 version = mod_version
 group = 'com.github.tartaricacid'
@@ -36,12 +34,13 @@ minecraft {
     mappings channel: 'parchment', version: '2023.08.20-1.20.1'
     accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
     runs {
-        client {
-            jvmArgs "-XX:+AllowEnhancedClassRedefinition"
-            workingDirectory project.file('run/client_a')
+        configureEach {
+            jvmArgs = [
+                    "-XX:+IgnoreUnrecognizedVMOptions",
+                    "-XX:+AllowEnhancedClassRedefinition"
+            ]
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
-            property 'fml.earlyprogresswindow', 'false'
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
             mods {
@@ -49,51 +48,35 @@ minecraft {
                     source sourceSets.main
                 }
             }
+        }
+
+        client {
+            workingDirectory project.file('run/client_a')
+            property 'fml.earlyprogresswindow', 'false'
         }
 
         client2 {
             parent minecraft.runs.client
             workingDirectory project.file('run/client_b')
             args '--username', 'tartaric_acid'
-            mods {
-                touhou_little_maid {
-                    source sourceSets.main
-                }
-            }
         }
 
         server {
-            jvmArgs "-XX:+AllowEnhancedClassRedefinition"
             workingDirectory project.file('run/server')
-            property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'debug'
             property 'forge.enabledGameTestNamespaces', 'touhou_little_maid'
-            property 'mixin.env.remapRefMap', 'true'
-            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
-            mods {
-                touhou_little_maid {
-                    source sourceSets.main
-                }
-            }
         }
 
         data {
             workingDirectory project.file('run/data')
-            property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'debug'
-            property 'mixin.env.remapRefMap', 'true'
-            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
             args '--mod', 'touhou_little_maid', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
-            mods {
-                touhou_little_maid {
-                    source sourceSets.main
-                }
-            }
         }
     }
 }
 
-sourceSets.main.resources { srcDir 'src/generated/resources' }
+sourceSets.main.resources {
+    srcDir 'src/generated/resources'
+    exclude '.cache/**'
+}
 
 mixin {
     add sourceSets.main, "touhou_little_maid.refmap.json"
@@ -114,129 +97,144 @@ repositories {
     }
     maven {
         url = "https://api.modrinth.com/maven"
-    }
-    maven {
-        url = "https://maven.conczin.net/Artifacts"
+        content {
+            includeGroup "maven.modrinth"
+        }
     }
     maven {
         // location of the maven that hosts JEI files since January 2023
         name = "Jared's maven"
         url = "https://maven.blamejared.com/"
+        content {
+            includeGroup "mezz.jei"
+            includeGroup "vazkii.patchouli"
+        }
     }
     maven {
         // location of a maven mirror for JEI files, as a fallback
         name = "ModMaven"
         url = "https://modmaven.dev"
+        content {
+            includeGroup "mezz.jei"
+            includeGroup "vazkii.patchouli"
+        }
+    }
+    maven {
+        url "https://maven.latvian.dev/releases"
+        content {
+            includeGroup "dev.latvian.mods"
+            includeGroup "dev.latvian.apps"
+        }
+    }
+    maven {
+        url = "https://maven.architectury.dev"
+        content {
+            includeGroup "dev.architectury"
+        }
     }
 }
 
-configurations {
-    // 自定义一个 minecraftLibrary，方便引入需要 Shadow 的库
-    mcLib
-    minecraftLibrary {
-        extendsFrom mcLib
-    }
-}
+jarJar.enable()
 
 dependencies {
     minecraft "net.minecraftforge:forge:${forge_version}"
 
-    // MP3 音频解码库
-    mcLib "com.googlecode.soundlibs:mp3spi:1.9.5.4"
-    mcLib "com.googlecode.soundlibs:jlayer:1.0.1.4"
-    mcLib "com.googlecode.soundlibs:tritonus-share:0.3.7.4"
-
     // Opus 音频解码库
-    mcLib "org.gagravarr:vorbis-java-core:0.8"
-    mcLib "io.github.jaredmdobson:concentus:1.0.2"
+    jarJar(minecraftLibrary("org.gagravarr:vorbis-java-core:0.8")) {
+        jarJar.ranged(it, "[0.8,)")
+    }
+    jarJar(minecraftLibrary("io.github.jaredmdobson:concentus:1.0.2")) {
+        jarJar.ranged(it, "[1.0.2,)")
+    }
+
+    // YAML 库
+    jarJar(minecraftLibrary("org.yaml:snakeyaml:2.4")) {
+        jarJar.ranged(it, "[2.4,)")
+    }
+
+    // 拆分出来的基岩版模型加载库
+    jarJar(implementation(fg.deobf("maven.modrinth:simplebedrockmodel:1.3.0-forge+mc1.20.1"))) {
+        jarJar.ranged(it, "[1.3.0,)")
+    }
+
+    // 单元测试
+    testImplementation 'junit:junit:4.13.2'
+
+    // KubeJS
+    implementation fg.deobf("dev.latvian.mods:kubejs-forge:2001.6.5-build.16")
+    implementation fg.deobf("dev.latvian.mods:rhino-forge:2001.2.3-build.10")
+    runtimeOnly fg.deobf("dev.architectury:architectury-forge:9.2.14")
+    runtimeOnly fg.deobf("maven.modrinth:probejs:6.0.0")
 
     // compile against the JEI API but do not include it at runtime
-    compileOnly(fg.deobf("mezz.jei:jei-1.20.1-common-api:${jei_version}"))
-    compileOnly(fg.deobf("mezz.jei:jei-1.20.1-forge-api:${jei_version}"))
+    compileOnly(fg.deobf("mezz.jei:jei-1.20.1-common-api:15.20.0.105"))
+    compileOnly(fg.deobf("mezz.jei:jei-1.20.1-forge-api:15.20.0.105"))
     // at runtime, use the full JEI jar for Forge
-    runtimeOnly(fg.deobf("mezz.jei:jei-1.20.1-forge:${jei_version}"))
+    runtimeOnly(fg.deobf("mezz.jei:jei-1.20.1-forge:15.20.0.105"))
 
     // rei
-    compileOnly fg.deobf("curse.maven:architectury-api-419699:${architectury_api_id}")
-    compileOnly fg.deobf("libs:RoughlyEnoughItems-forge:${rei_version}")
+    compileOnly fg.deobf("curse.maven:architectury-api-419699:5137938")
+    compileOnly fg.deobf("libs:RoughlyEnoughItems-forge:12.1.725")
 
     // emi
     // Forge (see below block as well if you use Forge Gradle)
-    compileOnly fg.deobf("libs:emi-forge:${emi_version}:api")
-    compileOnly fg.deobf("libs:emi-forge:${emi_version}")
+    compileOnly fg.deobf("libs:emi-forge:1.1.6+1.20.1:api")
+    compileOnly fg.deobf("libs:emi-forge:1.1.6+1.20.1")
 
-    compileOnly fg.deobf("libs:Patchouli:${patchouli_version}")
-    runtimeOnly fg.deobf("libs:Patchouli:${patchouli_version}")
+    compileOnly fg.deobf("vazkii.patchouli:Patchouli:1.20.1-80-FORGE")
+    runtimeOnly fg.deobf("vazkii.patchouli:Patchouli:1.20.1-80-FORGE")
 
-    implementation fg.deobf("curse.maven:jade-324717:${jade_id}")
-    implementation fg.deobf("curse.maven:the-one-probe-245211:${top_id}")
+    implementation fg.deobf("curse.maven:jade-324717:5072729")
+    implementation fg.deobf("curse.maven:the-one-probe-245211:4629624")
 
-    implementation fg.deobf("libs:cloth-config-forge:${cloth_config_forge}")
+    implementation fg.deobf("libs:cloth-config-forge:11.1.106")
 
-    runtimeOnly fg.deobf("curse.maven:citadel-331936:${citadel_id}")
-    implementation fg.deobf("curse.maven:domestication-innovation-591149:${domestication_innovation_id}")
+    runtimeOnly fg.deobf("maven.modrinth:citadel:2.4.9-forge")
+    implementation fg.deobf("curse.maven:domestication-innovation-591149:4911955")
 
     implementation fg.deobf("maven.modrinth:slashblade-resharped:1.1.6-1.20.1")
 
-    implementation fg.deobf("curse.maven:iron-chests-228756:${iron_chests_id}")
+    implementation fg.deobf("curse.maven:iron-chests-228756:4614852")
 
-    implementation fg.deobf("net.conczin:immersive_melodies:${immersive_melodies_version}")
+    compileOnly fg.deobf("maven.modrinth:immersive-melodies:0.3.0+1.20.1-forge")
 
-    runtimeOnly fg.deobf("curse.maven:carry-on-274259:${carry_on_id}")
+    runtimeOnly "curse.maven:kotlin-for-forge-351264:4983659"
+    runtimeOnly fg.deobf("curse.maven:libipn-679177:4870127")
+    implementation fg.deobf("curse.maven:inventory-profiles-next-495267:4813458")
 
-    runtimeOnly "curse.maven:kotlin-for-forge-351264:${kotlin_id}"
-    runtimeOnly fg.deobf("curse.maven:libipn-679177:${libipn_id}")
-    implementation fg.deobf("curse.maven:inventory-profiles-next-495267:${ipn_id}")
-
-    runtimeOnly fg.deobf("curse.maven:catalogue-459701:${catalogue_id}")
-
-    runtimeOnly fg.deobf("curse.maven:bookshelf-228525:${bookshelf_id}")
-    runtimeOnly fg.deobf("curse.maven:enchantment-descriptions-250419:${enchantment_descriptions_id}")
-
-    implementation fg.deobf("curse.maven:timeless-and-classics-zero-1028108:6069384-sources-6069403")
+    implementation fg.deobf("curse.maven:timeless-and-classics-zero-1028108:6518539-sources-6518544")
 
     implementation fg.deobf("maven.modrinth:simple-hats:1.20.1-0.3.2-forge")
     implementation fg.deobf("maven.modrinth:curios:5.9.1+1.20.1-forge")
 
-    implementation fg.deobf("maven.modrinth:torohealth-damage-indicators-updated:1.20.1-forge-1")
+    compileOnly fg.deobf("maven.modrinth:torohealth-damage-indicators-updated:1.20.1-forge-1")
 
     implementation fg.deobf("curse.maven:aquaculture-60028:5585290")
-    runtimeOnly fg.deobf("curse.maven:lavafishing-1035887:5432767")
-
-    runtimeOnly fg.deobf("maven.modrinth:better-advancements:0.4.2.10-forge")
 
     runtimeOnly fg.deobf("maven.modrinth:embeddium:0.3.31+mc1.20.1")
-    runtimeOnly fg.deobf('maven.modrinth:oculus:1.20.1-1.7.0')
-
-    runtimeOnly fg.deobf("maven.modrinth:common-network:1.0.5-1.20.1")
-    runtimeOnly fg.deobf("maven.modrinth:just-more-cakes:1.18.1-forge")
-    runtimeOnly fg.deobf("maven.modrinth:spawn-animations:1.10+mod-forge")
-
-    runtimeOnly fg.deobf("maven.modrinth:farmers-delight:1.20.1-1.2.6-forge")
+    compileOnly fg.deobf("maven.modrinth:embeddium:0.3.31+mc1.20.1")
 
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
-}
 
-shadowJar {
-    configurations = [project.configurations.mcLib]
-
-    // MP3 音频库 居然会把 junit 打包进去……
-    dependencies {
-        exclude(dependency('junit:junit'))
-    }
-
-    relocate 'javazoom.jl', 'com.github.tartaricacid.touhoulittlemaid.libs.jl'
-    relocate 'javazoom.spi', 'com.github.tartaricacid.touhoulittlemaid.libs.spi'
-    relocate 'org.tritonus', 'com.github.tartaricacid.touhoulittlemaid.libs.tritonus'
-    relocate 'io.github.jaredmdobson.concentus', 'com.github.tartaricacid.touhoulittlemaid.libs.concentus'
-    relocate 'org.gagravarr', 'com.github.tartaricacid.touhoulittlemaid.libs.gagravarr'
-
-    mergeServiceFiles()
-    minimize()
-}
-
-reobf {
-    shadowJar {}
+    // runtimeOnly fg.deobf("curse.maven:carry-on-274259:4882500")
+    // runtimeOnly fg.deobf("curse.maven:bookshelf-228525:5084135")
+    // runtimeOnly fg.deobf("curse.maven:enchantment-descriptions-250419:5136988")
+    // runtimeOnly fg.deobf("maven.modrinth:lootr:0.7.35.90-forge")
+    // runtimeOnly fg.deobf("maven.modrinth:industrial-foregoing:1.20.1-3.5.19")
+    // runtimeOnly fg.deobf("maven.modrinth:titanium:1.20.1-3.8.32")
+    // runtimeOnly fg.deobf("maven.modrinth:geckolib:4.4.5-forge,1.20.1")
+    // runtimeOnly fg.deobf("maven.modrinth:caelus:3.2.0+1.20.1")
+    // runtimeOnly fg.deobf("maven.modrinth:playeranimator:1.0.2-rc1+1.20-forge")
+    // runtimeOnly fg.deobf("maven.modrinth:irons-spells-n-spellbooks:1.20.1-3.4.0.7")
+    // runtimeOnly fg.deobf("maven.modrinth:farmers-delight:1.20.1-1.2.6-forge")
+    // runtimeOnly fg.deobf("maven.modrinth:better-advancements:0.4.2.10-forge")
+    // runtimeOnly fg.deobf("maven.modrinth:ice-and-fire-dragons:2.1.13-1.20.1-beta-5")
+    // runtimeOnly fg.deobf('maven.modrinth:oculus:1.20.1-1.7.0')
+    // runtimeOnly fg.deobf('curse.maven:hostile-neural-networks-552574:5895036')
+    // runtimeOnly fg.deobf('curse.maven:placebo-283644:6274231')
+    // runtimeOnly fg.deobf("curse.maven:maid-storage-manager-1210244:6315697")
+    // runtimeOnly fg.deobf("curse.maven:lavafishing-1035887:5432767")
+    // runtimeOnly fg.deobf("curse.maven:catalogue-459701:4766090")
 }
 
 tasks.compileJava {
@@ -255,6 +253,11 @@ jar {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+}
+
+java {
+    // 编译源码文件，方便发布 maven
+    withSourcesJar()
 }
 
 // 让 idea 主动下载前置库的源码和 Javadoc

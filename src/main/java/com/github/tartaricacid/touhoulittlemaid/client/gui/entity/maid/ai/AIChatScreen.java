@@ -1,5 +1,6 @@
 package com.github.tartaricacid.touhoulittlemaid.client.gui.entity.maid.ai;
 
+import com.github.tartaricacid.touhoulittlemaid.ai.manager.entity.ChatClientInfo;
 import com.github.tartaricacid.touhoulittlemaid.client.gui.widget.button.FlatColorButton;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.github.tartaricacid.touhoulittlemaid.network.NetworkHandler;
@@ -28,6 +29,8 @@ public class AIChatScreen extends Screen {
 
     @Override
     protected void init() {
+        this.clearWidgets();
+
         int posX = this.width / 2;
         int posY = this.height / 2;
 
@@ -40,9 +43,13 @@ public class AIChatScreen extends Screen {
         this.addWidget(this.input);
         this.setInitialFocus(this.input);
 
-        this.configButton = new FlatColorButton(posX + 142, posY + 58, 20, 20, Component.literal("✎"), b -> {
-            this.getMinecraft().setScreen(new AIChatConfigScreen(this));
-        }).setTooltips("ai.touhou_little_maid.chat.config.tip");
+        this.configButton = new FlatColorButton(posX + 142, posY + 58, 20, 20, Component.literal("✎"),
+                b -> {
+                    LocalPlayer player = this.getMinecraft().player;
+                    if (player != null) {
+                        player.sendSystemMessage(Component.translatable("ai.touhou_little_maid.chat.config.tip.under_construction"));
+                    }
+                }).setTooltips("ai.touhou_little_maid.chat.config.tip");
         this.addRenderableWidget(this.configButton);
     }
 
@@ -126,7 +133,8 @@ public class AIChatScreen extends Screen {
         String value = input.getValue();
         LocalPlayer player = this.getMinecraft().player;
         if (StringUtils.isNotBlank(value) && player != null) {
-            NetworkHandler.CHANNEL.sendToServer(new SendUserChatMessage(this.maid.getId(), value));
+            ChatClientInfo clientInfo = ChatClientInfo.fromMaid(this.maid);
+            NetworkHandler.CHANNEL.sendToServer(new SendUserChatMessage(this.maid.getId(), value, clientInfo));
             String name = player.getScoreboardName();
             String format = String.format("<%s> %s", name, value);
             player.sendSystemMessage(Component.literal(format).withStyle(ChatFormatting.GRAY));

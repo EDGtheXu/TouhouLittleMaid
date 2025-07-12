@@ -17,8 +17,8 @@ body:
       options:
         - label: "1.12.2 (End of support)"
         - label: "1.16.5 (End of support)"
-        - label: "1.18.2"
-        - label: "1.19.2"
+        - label: "1.18.2 (End of support)"
+        - label: "1.19.2 (End of support)"
         - label: "1.20/1.20.1"
         - label: "1.21/1.21.1"
     validations:

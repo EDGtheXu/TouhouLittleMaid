@@ -29,7 +29,7 @@ public class UndyingTotemBauble implements IMaidBauble {
         if (!source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
             int slot = ItemsUtil.getBaubleSlotInMaid(maid, this);
             if (slot >= 0) {
-                maid.getMaidBauble().setStackInSlot(slot, ItemStack.EMPTY);
+                maid.getMaidBauble().getStackInSlot(slot).shrink(1);
                 event.setCanceled(true);
                 maid.setHealth(1.0F);
                 maid.removeAllEffects();

@@ -1,6 +1,6 @@
 package com.github.tartaricacid.touhoulittlemaid.geckolib3.geo;
 
-import com.github.tartaricacid.touhoulittlemaid.extended.LivingEntityRendererAccessor;
+import com.github.tartaricacid.touhoulittlemaid.geckolib3.extended.LivingEntityRendererAccessor;
 import com.github.tartaricacid.touhoulittlemaid.geckolib3.core.AnimatableEntity;
 import com.github.tartaricacid.touhoulittlemaid.geckolib3.core.event.predicate.AnimationEvent;
 import com.github.tartaricacid.touhoulittlemaid.geckolib3.core.molang.context.AnimationContext;
@@ -321,5 +321,9 @@ public abstract class GeoReplacedEntityRenderer<T extends LivingEntity, E extend
     @Override
     public void setCurrentRTB(MultiBufferSource bufferSource) {
         this.rtb = bufferSource;
+    }
+
+    public List<GeoLayerRenderer> getLayerRenderers() {
+        return layerRenderers;
     }
 }

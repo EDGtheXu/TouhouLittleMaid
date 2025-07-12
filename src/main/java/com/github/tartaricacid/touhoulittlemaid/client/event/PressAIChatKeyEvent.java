@@ -1,6 +1,7 @@
 package com.github.tartaricacid.touhoulittlemaid.client.event;
 
 import com.github.tartaricacid.touhoulittlemaid.client.gui.entity.maid.ai.AIChatScreen;
+import com.github.tartaricacid.touhoulittlemaid.config.subconfig.AIConfig;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -19,12 +20,9 @@ import org.lwjgl.glfw.GLFW;
 @OnlyIn(Dist.CLIENT)
 @Mod.EventBusSubscriber(value = Dist.CLIENT)
 public class PressAIChatKeyEvent {
-    // TODO：可以自定义能够进行 Chat 的女仆
-    public static final String CAN_CHAT_MAID_ID = "winefox";
-
     @SubscribeEvent
     public static void onOpenConfig(InputEvent.Key event) {
-        if (isInGame() && keyIsMatch(event)) {
+        if (isInGame() && AIConfig.LLM_ENABLED.get() && keyIsMatch(event)) {
             EntityMaid maid = maidCheck();
             if (maid == null) {
                 return;
@@ -60,12 +58,7 @@ public class PressAIChatKeyEvent {
         if (!maid.isOwnedBy(player)) {
             return null;
         }
-        // TODO：暂定只有酒狐可以进行 Chat
-        String modelId = maid.getModelId();
-        if (modelId.contains(CAN_CHAT_MAID_ID)) {
-            return maid;
-        }
-        return null;
+        return maid;
     }
 
     private static boolean isInGame() {

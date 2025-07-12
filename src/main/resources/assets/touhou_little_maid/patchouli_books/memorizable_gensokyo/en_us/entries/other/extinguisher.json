@@ -8,6 +8,10 @@
       "type": "spotlight",
       "item": "touhou_little_maid:extinguisher",
       "text": "patchouli.touhou_little_maid.book.entries.other.extinguisher.pages.0.text"
+    },
+    {
+      "type": "altar_recipe",
+      "recipe_id": "touhou_little_maid:altar/craft_extinguisher"
     }
   ]
 }

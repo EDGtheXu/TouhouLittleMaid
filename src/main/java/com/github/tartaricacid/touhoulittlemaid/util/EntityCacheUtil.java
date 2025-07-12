@@ -28,6 +28,14 @@ public final class EntityCacheUtil {
      * 实体缓存，在客户端会大量运用实体渲染，这个缓存可以减少重复创建实体带来的性能问题
      */
     public static final Cache<EntityType<?>, Entity> ENTITY_CACHE = CacheBuilder.newBuilder().expireAfterAccess(5, TimeUnit.MINUTES).build();
+    /**
+     * 女仆实体缓存，用于雕像，因为雕像如果共用一个实体，会导致 GeckoLib 动画渲染错误
+     */
+    public static final Cache<Long, EntityMaid> STATUE_CACHE = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).build();
+    /**
+     * 女仆实体缓存，用于物品形态的手办，因为如果共用一个实体，会导致 GeckoLib 动画渲染错误
+     */
+    public static final Cache<ItemStack, EntityMaid> GARAGE_KIT_CACHE = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).build();
     private static ResourceKey<Level> dimAt;
 
     public static void clearMaidDataResidue(EntityMaid maid, boolean clearEquipmentData) {
